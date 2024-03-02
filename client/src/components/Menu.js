@@ -101,10 +101,10 @@ const Menu = () => {
         </div>
       </div>
 
-      {/* Carne Section */}
-      <div className="menu-section">
+    {/* Carne Section */}
+    <div className="menu-section">
         <h2>Carne</h2>
-
+        
         <div className="menu-item">
           <h3>BBQ Chicken Sliders</h3>
           <p className="price">$15.45</p>
@@ -118,7 +118,7 @@ const Menu = () => {
         </div>
       </div>
 
-      {/* House Cocktails Section */}
+    {/* House Cocktails Section */}
     <div className="menu-section">
     <h2>HOUSE COCKTAILS</h2>
     
