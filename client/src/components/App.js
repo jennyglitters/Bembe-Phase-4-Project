@@ -1,11 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import NavBar from './components/NavBar';
-import Home from './components/Home';
-import Menu from './components/Menu';
-import ReservationForm from './components/ReservationForm';
-import LocationHours from './components/Location&Hours';
-import './index.css';
+import Home from './Home';
+import LocationHours from './Location&Hours';
+import Menu from './Menu';
+import NavBar from './NavBar';
+import ReservationForm from './ReservationForm';
 
 function App() {
   return (
@@ -13,10 +12,10 @@ function App() {
       <div className="App">
         <NavBar />
         <Routes>
-          <Route exact path="/" element={<Home />} />
+          <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/reservationform" element={<ReservationForm />} />
-          <Route path="/location&hours" element={<LocationHours />} />
+          <Route path="/locationandhours" element={<LocationHours />} />
         </Routes>
       </div>
     </Router>
