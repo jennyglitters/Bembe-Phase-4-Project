@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Import Route, not Routes
 import Home from './Home';
 import LocationHours from './Location&Hours';
 import Menu from './Menu';
@@ -11,7 +11,7 @@ function App() {
     <Router>
       <div className="App">
         <NavBar />
-        <Routes>
+        <Routes> {/* Use Routes if you're using React Router v6 */}
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/reservationform" element={<ReservationForm />} />

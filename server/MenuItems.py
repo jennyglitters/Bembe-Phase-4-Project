@@ -5,7 +5,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from config import app, db, api
 from models import MenuItem
+from flask_migrate import Migrate
 
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 @app.route('/api/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
 def menu_item(item_id):
     menu_item = MenuItem.query.get_or_404(item_id)
@@ -47,3 +54,7 @@ def menu_items():
         db.session.add(new_menu_item)
         db.session.commit()
         return jsonify({'message': 'Menu item created successfully'}), 201
+    
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5555)

@@ -1,71 +1,61 @@
-from flask import request
-from flask_restful import Resource
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from config import app, db, api
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token
+from models.py import Users
+from config import app, db
+from flask_migrate import Migrate
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 CORS(app)  # Enable Cross-Origin Resource Sharing
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-db = SQLAlchemy(app)
+app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key
+jwt = JWTManager(app)
 
 # Routes for Users
 @app.route('/users', methods=['GET', 'POST'])
 def users():
     if request.method == 'GET':
-        users = User.query.all()
+        users = Users.query.all()
         users_json = [
             {
                 'id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'notes': user.notes,
-                'phone_number': user.phone_number,
-                'email': user.email,
-                'date': user.date,
-                'date_time': user.date_time,
-                'user_id': user.user_id,
-                'guest_id': user.guest_id,
-              'menu_id': user.menu_id,
+                'username': user.username,
+                'email': user.user_email
             }
             for user in users
         ]
-        return jsonify(users_json)
+        return jsonify(users_json), 200
     elif request.method == 'POST':
         data = request.json
-        new_user = User(
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            notes=data['notes'],
-            phone_number=data['phone_number'],
-            email=data['email'],
-            date=data['date'],
-            date_time=data['date_time'],
-            user_id=data['user_id'],
-            guest_id=data['guest_id'],
-            menu_id=data['menu_id'],
+        new_user = Users(
+            username=data['username'],
+            user_email=data['email'],
+            passwordhash=data['password']
         )
         db.session.add(new_user)
         db.session.commit()
         return jsonify({'message': 'User created successfully'}), 201
     else:
         return jsonify({'message': 'Method not allowed'}), 405
-    
 
-# Initialize JWT
-app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key
-jwt = JWTManager(app)
-
-# Routes for User Authentication
+# Route for User Authentication
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
-    # Validate username and password
-    # Example: check against database or other authentication method
-    if data['username'] == 'admin' and data['password'] == 'admin_password':
-        access_token = create_access_token(identity=data['username'])
+    username = data['username']
+    password = data['password']
+
+    # Query the database to find a user with the provided username
+    user = Users.query.filter_by(username=username).first()
+
+    if user and user.check_password(password):
+        # If the user exists and the password matches, create an access token
+        access_token = create_access_token(identity=username)
         return jsonify(access_token=access_token), 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 401
