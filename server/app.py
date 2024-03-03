@@ -3,9 +3,9 @@ from flask_restful import Resource
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from config import app, db, api
-from models import User
-
+from .config import app, db, api
+from .models import User
+from . import config
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
