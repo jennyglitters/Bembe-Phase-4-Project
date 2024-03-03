@@ -3,9 +3,9 @@ from flask_restful import Resource
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from .config import app, db, api
-from .models import User
-from . import config
+from config import app, db, api
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -53,8 +53,6 @@ def users():
     else:
         return jsonify({'message': 'Method not allowed'}), 405
     
-
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 # Initialize JWT
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key

@@ -6,6 +6,8 @@ from datetime import datetime
 from flask_restful import Api, Resource, reqparse
 from . import config
 from .serializers import SerializerMixin
+from .config import app, db, api
+
 
 
 app = Flask(__name__)
