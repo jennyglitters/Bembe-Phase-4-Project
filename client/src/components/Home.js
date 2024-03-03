@@ -1,24 +1,28 @@
-import React from 'react'; 
+import React from 'react';
 
-
-
-const Home = () => {
+const LocationAndHours = () => {
   return (
-    <div className="home-container">
-      <h1>Bembe</h1>
-      <div className="hours">
-        <p>Sunday - Thursday: 11am - 9:30pm</p>
-        <p>Friday - Saturday: 11am - 10pm</p>
+    <div className="location-hours-container" style={{ backgroundImage: 'url(/shrimp.jpg)' }}>
+      <div className="map-overlay">
+        <img
+          src="/BembeDirections.png"
+          alt="Directions to Bembe"
+          className="location-map"
+        />
       </div>
-      <div className="footer-info">
-        <p>Bembe Puerto Rican Dominican Fusion</p>
-        <p>FREE DELIVERY</p>
-        <p>973-554-5648</p>
-        <p>25 Christopher St.</p>
-        <p>NewYork NY 11234</p>
+      <div className="info-content">
+        <h1>Bembe Puerto Rican Dominican Fusion</h1>
+        <h2>FREE DELIVERY</h2>
+        <p><a href="tel:973-554-5648">973-554-5648</a></p>
+        <address>25 Christopher St.<br />New York, NY 10014</address>
+        <p className="hours-of-operation">
+          <strong>Hours:</strong><br />
+          Mon-Fri: 11am - 10:00pm<br />
+          Sat-Sun: 12:00pm - 11:00pm
+        </p>
       </div>
     </div>
   );
 };
 
-export default Home;
+export default LocationAndHours;

@@ -5,3 +5,31 @@
   --text: hsla(0, 0%, 100%, 0.88);
 }
 
+/* 
+.location-hours-container {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  text-align: center;
+}
+
+.map-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2; /* Ensure the map appears above the background image 
+}
+
+.location-map {
+  max-width: 100%;
+  height: auto;
+  border: 3px solid white; 
+}
+
+.info-content {
+  position: relative;
+  z-index: 3; 
+  color: white; 
+} 
+*/
