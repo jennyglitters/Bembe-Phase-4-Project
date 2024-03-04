@@ -3,9 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from config import Config
-from models import Users  # Assuming Users model is imported from models.py
 from flask_migrate import Migrate
 from flask_restful import Api
+from models import Users, MenuItem, Reservation, Menu, MenuItemForm
+from flask_jwt_extended import jwt_required, get_jwt_identity  # Import jwt_required and get_jwt_identity
+
+# ...
 
 # Instantiate Flask app
 app = Flask(__name__)
@@ -70,7 +73,7 @@ def login():
     else:
         return jsonify({'message': 'Invalid username or password'}), 401
 @app.route('/api/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
-def menu_item(item_id):
+def specific_menu_item(item_id):
     menu_item = MenuItem.query.get_or_404(item_id)
     
     if request.method == 'GET':
@@ -92,7 +95,7 @@ def menu_item(item_id):
 
 # Routes for Menu Items
 @app.route('/api/menu_items', methods=['GET', 'POST'])
-def menu_item():
+def menu_items():
     if request.method == 'GET':
         menu_items = MenuItem.query.all()
         menu_items_json = [
@@ -117,23 +120,45 @@ def menu_item():
 def reservation(reservation_id):
     current_user = get_jwt_identity()
     reservation = Reservation.query.get_or_404(reservation_id)
-    if reservation.user_id!= current_user:
+    
+    # Check if the current user is the owner of the reservation
+    if reservation.user_id != current_user:
         return jsonify({'message': 'Unauthorized access'}), 403
     
     if request.method == 'GET':
-        # Implement logic to retrieve a reservation
-        pass
+        # Retrieve the reservation details and return as JSON response
+        reservation_data = {
+            'id': reservation.id,
+            'user_id': reservation.user_id,
+            'date_time': reservation.date_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'party_size': reservation.party_size,
+            'special_requests': reservation.special_requests
+        }
+        return jsonify(reservation_data), 200
+
     elif request.method == 'PUT':
         data = request.json
-        # Implement logic to update a reservation
-        pass
+        # Update reservation details if provided
+        if 'date_time' in data:
+            reservation.date_time = data['date_time']
+        if 'party_size' in data:
+            reservation.party_size = data['party_size']
+        if 'special_requests' in data:
+            reservation.special_requests = data['special_requests']
+        
+        # Commit changes to the database
+        db.session.commit()
+        return jsonify({'message': 'Reservation updated successfully'}), 200
+
     elif request.method == 'DELETE':
+        # Delete the reservation from the database
         db.session.delete(reservation)
         db.session.commit()
-        return jsonify({'message': 'Reservation deleted successfully'})
+        return jsonify({'message': 'Reservation deleted successfully'}), 200
+
     else:
+        # Method not allowed
         return jsonify({'message': 'Method not allowed'}), 405
-    return jsonify({'message': 'Reservation retrieved successfully'}), 200
 
 # Initialize JWT
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key

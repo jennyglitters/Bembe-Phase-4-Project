@@ -109,6 +109,7 @@ class Reservation(db.Model):
         else:
             raise ValueError(f"Invalid {key}")
 if __name__ == '__main__':
+    app.run(debug=True, port=5555)
     # This block of code will be executed when you run the script directly
     # You can add any code here that you want to execute when the script is run
 
