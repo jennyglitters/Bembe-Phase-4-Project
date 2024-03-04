@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'Formik';
-import { ReactDatePicker } from 'react-datepicker'
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const Reservations = () => {
@@ -41,12 +41,13 @@ const Reservations = () => {
 
   const generateTimeSlots = () => {
     const slots = [];
-    for (let i = 15; i <= 23; i++) { // for times from 3 PM to 11 PM
-      slots.push(`${i < 10 ? `0${i}` : i}:00`);
-      slots.push(`${i < 10 ? `0${i}` : i}:30`);
+    for (let i = 15; i <= 23; i++) {
+      const hour = i % 12 === 0 ? 12 : i % 12;
+      slots.push(`${hour}:00 ${i >= 12 ? 'PM' : 'AM'}`);
+      slots.push(`${hour}:30 ${i >= 12 ? 'PM' : 'AM'}`);
     }
-    // Add the last time slot for 11:30 PM
-    slots.push('23:30');
+    // Making sure the last time slot for 11:30 PM is included
+    slots.push('11:30 PM');
     return slots;
   };
 
@@ -76,6 +77,8 @@ const Reservations = () => {
   const handleClearForm = (resetForm) => {
     resetForm();
     setSubmissionMessage('');
+    setGuests(1); // Resetting guests back to initial value
+    setIsMaxCapacity(false); // Resetting capacity warning back to initial state
   };
 
   const handleGuestChange = (event) => {
@@ -92,143 +95,146 @@ const Reservations = () => {
     <div>
       <h2>Make a Reservation</h2>
       {submissionMessage && (
-    <div className="submission-message">
-      {submissionMessage}
-    </div>
-  )}
-  <Formik
-    initialValues={{
-      name: '',
-      lastname: '',
-      email: '',
-      phonenumber: '',
-      time: '',
-      guests: '',
-      menuItems: [], // Holds selected menu items
-      date: ''
-    }}
-    // Validation logic 
-    validate={validate}
-    onSubmit={handleSubmit}
-  >
-  
-{({ values, setFieldValue, isSubmitting, resetForm }) => (
-  <Form>
-    <div className="form-field">
-      <label htmlFor="name">Name</label>
-      <Field id="name" name="name" placeholder="Your Name" />
-      <ErrorMessage name="name" component="div" className="field-error" />
-    </div>
+        <div className="submission-message">
+          {submissionMessage}
+        </div>
+      )}
+      <Formik
+        initialValues={{
+          name: '',
+          lastname: '',
+          email: '',
+          phonenumber: '',
+          time: '',
+          guests: '',
+          menuItems: [], // Holds selected menu items
+          date: ''
+        }}
+        // Validation logic 
+        validate={validate}
+        onSubmit={handleSubmit}
+      >
+        {({ values, setFieldValue, isSubmitting, resetForm }) => (
+          <Form>
+            <div className="form-field">
+              <label htmlFor="name">Name</label>
+              <Field id="name" name="name" placeholder="Your Name" />
+              <ErrorMessage name="name" component="div" className="field-error" />
+            </div>
 
-    <div className="form-field">
-      <label htmlFor="lastname">Last Name</label>
-      <Field id="lastname" name="lastname" placeholder="Your Last Name" />
-      <ErrorMessage name="lastname" component="div" className="field-error" />
-    </div>
+            <div className="form-field">
+              <label htmlFor="lastname">Last Name</label>
+              <Field id="lastname" name="lastname" placeholder="Your Last Name" />
+              <ErrorMessage name="lastname" component="div" className="field-error" />
+            </div>
 
-    <div className="form-field">
-      <label htmlFor="email">Email</label>
-      <Field id="email" name="email" type="email" placeholder="Your Email Address" />
-      <ErrorMessage name="email" component="div" className="field-error" />
-    </div>
+            <div className="form-field">
+              <label htmlFor="email">Email</label>
+              <Field id="email" name="email" type="email" placeholder="Your Email Address" />
+              <ErrorMessage name="email" component="div" className="field-error" />
+            </div>
 
-    <div className="form-field">
-      <label htmlFor="phonenumber">Phone Number</label>
-      <Field id="phonenumber" name="phonenumber" placeholder="Your Phone Number" />
-      <ErrorMessage name="phonenumber" component="div" className="field-error" />
-    </div>
+            <div className="form-field">
+              <label htmlFor="phonenumber">Phone Number</label>
+              <Field id="phonenumber" name="phonenumber" placeholder="Your Phone Number" />
+              <ErrorMessage name="phonenumber" component="div" className="field-error" />
+            </div>
 
-    <div className="form-field">
-        <label htmlFor="date">Date</label>
-        <ReactDatePicker
-          selected={values.date}
-          onChange={date => setFieldValue('date', date)}
-          dateFormat="MMMM d, yyyy"
-          minDate={new Date()}
-          className="form-control"
-        />
-        <ErrorMessage name="date" component="div" className="field-error" />
-      </div>
+            <div className="form-field">
+              <label htmlFor="date">Date</label>
+              <ReactDatePicker
+                selected={values.date}
+                onChange={date => setFieldValue('date', date)}
+                dateFormat="MMMM d, yyyy"
+                minDate={new Date()}
+                className="form-control"
+              />
+              <ErrorMessage name="date" component="div" className="field-error" />
+            </div>
 
-    <div className="form-field">
-      <label htmlFor="time">Time</label>
-      <Field as="select" id="time" name="time">
-      {generateTimeSlots().map(time => (
-      <option key={time} value={time}>{time}</option>
-      ))}
-    </Field>
-    <ErrorMessage name="time" component="div" className="field-error" />
-    </div>
+            <div className="form-field">
+              <label htmlFor="time">Time</label>
+              <Field as="select" id="time" name="time">
+                {generateTimeSlots().map(time => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
+              </Field>
+              <ErrorMessage name="time" component="div" className="field-error" />
+            </div>
 
-    <div className="form-field">
-      <label htmlFor="guests">Number of Guests:</label>
-      <select id="guests" name="guests" value={guests} onChange={handleGuestChange}>
-      {[...Array(maxGuests)].map((_, i) => (
-      <option key={i} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
-      ))}
-      </select>
-    <ErrorMessage name="guests" component="div" className="field-error" />
-    </div>
-      
-      {isMaxCapacity && (
-        <p className="capacity-message">Max Capacity is {maxGuests} currently, please select again</p>
+            <div className="form-field">
+              <label htmlFor="guests">Number of Guests:</label>
+              <select id="guests" name="guests" value={guests} onChange={handleGuestChange}>
+                {[...Array(maxGuests)].map((_, i) => (
+                  <option key={i} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
+                ))}
+              </select>
+              <ErrorMessage name="guests" component="div" className="field-error" />
+            </div>
+            
+            {isMaxCapacity && (
+              <p className="capacity-message">Max Capacity is {maxGuests} currently, please select again</p>
+            )}
+
+            {/* Field to select menu items */}
+            <div role="group" aria-labelledby="checkbox-group" className="form-field">
+              <h3>Menu Items</h3>
+              {menuItems.map((item) => (
+                <label key={item.id}>
+                  <Field
+                    type="checkbox"
+                    name="menuItems"
+                    value={item.name}
+                    checked={values.menuItems.includes(item.name)}
+                    onChange={() => {
+                      const nextValue = values.menuItems.includes(item.name)
+                        ? values.menuItems.filter((i) => i !== item.name)
+                        : [...values.menuItems, item.name];
+                      setFieldValue('menuItems', nextValue);
+                    }}
+                  />
+                  {item.name}
+                </label>
+              ))}
+            </div>
+            
+            {/* Field for Special Notes */}
+            <div className="form-field">
+              <label htmlFor="specialNotes">Special Notes</label>
+              <Field as="textarea" id="specialNotes" name="specialNotes" placeholder="Any special notes or requests?" />
+              <ErrorMessage name="specialNotes" component="div" className="field-error" />
+            </div>
+
+            <button type="submit" disabled={isSubmitting} className="submit-button">
+              Submit Reservation
+            </button>
+            <button type="button" onClick={() => handleClearForm(resetForm)} className="clear-form-button">
+              Clear Form
+            </button>
+          </Form>
+        )}
+      </Formik>
+
+      {/* Display the current user's reservation */}
+      {currentReservation && (
+        <div>
+          <h3>Your Current Reservation:</h3>
+          <p><strong>Name:</strong> {`${currentReservation.name} ${currentReservation.lastname}`}</p>
+          <p><strong>Email:</strong> {currentReservation.email}</p>
+          <p><strong>Phone Number:</strong> {currentReservation.phonenumber}</p>
+          <p><strong>Date:</strong> {currentReservation.date}</p>
+          <p><strong>Time:</strong> {currentReservation.time}</p>
+          <p><strong>Guests:</strong> {currentReservation.guests}</p>
+          <p><strong>Menu Items:</strong> {currentReservation.menuItems.join(', ')}</p>
+          {/* Display special notes */}
+          {currentReservation.specialNotes && (
+            <p><strong>Special Notes:</strong> {currentReservation.specialNotes}</p>
+          )}
+        </div>
       )}
 
-    {/* Field to select menu items */}
-    <div role="group" aria-labelledby="checkbox-group" className="form-field">
-      <h3>Menu Items</h3>
-      {menuItems.map((item) => (
-        <label key={item.id}>
-          <Field
-            type="checkbox"
-            name="menuItems"
-            value={item.name}
-            checked={values.menuItems.includes(item.name)}
-            onChange={() => {
-              const nextValue = values.menuItems.includes(item.name)
-                ? values.menuItems.filter((i) => i !== item.name)
-                : [...values.menuItems, item.name];
-              setFieldValue('menuItems', nextValue);
-            }}
-          />
-          {item.name}
-        </label>
-      ))}
     </div>
-    
-    {/* Field for Special Notes */}
-    <div className="form-field">
-      <label htmlFor="specialNotes">Special Notes</label>
-      <Field as="textarea" id="specialNotes" name="specialNotes" placeholder="Any special notes or requests?" />
-      <ErrorMessage name="specialNotes" component="div" className="field-error" />
-    </div>
-
-    <button type="submit" disabled={isSubmitting} className="submit-button">
-      Submit Reservation
-    </button>
-    <button type="button" onClick={() => handleClearForm(resetForm)} className="clear-form-button">
-      Clear Form
-    </button>
-  </Form>
-)}
-</Formik>
-
-{/* Display the current user's reservation */}
-{currentReservation && (
-  <div>
-    <h3>Your Current Reservation:</h3>
-    <p><strong>Name:</strong> {`${currentReservation.name} ${currentReservation.lastname}`}</p>
-    <p><strong>Email:</strong> {currentReservation.email}</p>
-    <p><strong>Phone Number:</strong> {currentReservation.phonenumber}</p>
-    <p><strong>Date:</strong> {currentReservation.date}</p>
-    <p><strong>Time:</strong> {currentReservation.time}</p>
-    <p><strong>Guests:</strong> {currentReservation.guests}</p>
-    <p><strong>Menu Items:</strong> {currentReservation.menuItems.join(', ')}</p>
-    {/* Display special notes */}
-    {currentReservation.specialNotes && (
-      <p><strong>Special Notes:</strong> {currentReservation.specialNotes}</p>
-    )}
-  </div>
-)}
+  );
+};
 
 export default Reservations;

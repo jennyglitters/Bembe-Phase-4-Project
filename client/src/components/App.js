@@ -5,7 +5,6 @@ import Home from './components/Home';
 import Menu from './components/Menu';
 import ReservationForm from './components/ReservationForm';
 import LocationHours from './components/Location&Hours';
-import Login from './components/Login';
 import ReservationManagement from './components/ReservationManagement';
 import './index.css';
 
@@ -19,7 +18,6 @@ function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/reservation" element={<ReservationForm />} />
           <Route path="/location-hours" element={<LocationHours />} />
-          <Route path="/login" element={<Login />} />
           <Route path="/manage-reservation" element={<ReservationManagement />} />
         </Routes>
       </div>
