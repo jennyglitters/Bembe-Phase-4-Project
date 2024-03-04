@@ -1,84 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import ReservationForm from './ReservationForm';
+import { useNavigate } from 'react-router-dom';
 
 const ReservationManager = () => {
   const [email, setEmail] = useState('');
-  const [reservations, setReservations] = useState([]);
-  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [reservation, setReservation] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if the user is already logged in when the component mounts
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
       const foundUser = JSON.parse(loggedInUser);
       setEmail(foundUser.email);
       setIsAuthenticated(true);
-      fetchReservations(foundUser.email);
+      fetchReservation(foundUser.email);
     }
   }, []);
 
   const handleLogin = async (email) => {
-    // Authenticate the user and fetch the reservations
     try {
       const response = await axios.post('/api/auth/login', { email });
       setIsAuthenticated(true);
       localStorage.setItem('user', JSON.stringify(response.data));
-      fetchReservations(email);
+      fetchReservation(email);
     } catch (error) {
       console.error('Login failed:', error);
-      // Handle login failure
     }
   };
 
-  const fetchReservations = async (email) => {
+  const fetchReservation = async (email) => {
     try {
       const response = await axios.get(`/api/reservations?email=${email}`);
-      setReservations(response.data);
+      setReservation(response.data); // Assuming the backend returns the most recent reservation for this email
     } catch (error) {
-      console.error('Error fetching reservations:', error);
+      console.error('Error fetching reservation:', error);
     }
   };
 
-  const handleUpdateReservation = async (updatedReservationData) => {
-    try {
-      const response = await axios.put(`/api/reservations/${updatedReservationData.id}`, updatedReservationData);
-      setReservations(reservations.map(reservation =>
-        reservation.id === updatedReservationData.id ? response.data : reservation
-      ));
-      setSelectedReservation(null);
-    } catch (error) {
-      console.error('Error updating reservation:', error);
-    }
+  const handleUpdateReservationClick = () => {
+    navigate('/reservation', { state: { reservation: reservation, isNew: false } });
   };
 
-  const handleDeleteReservation = async (reservationId) => {
+  const handleDeleteReservation = async () => {
     try {
-      await axios.delete(`/api/reservations/${reservationId}`);
-      setReservations(reservations.filter(reservation => reservation.id !== reservationId));
-      setSelectedReservation(null);
+      await axios.delete(`/api/reservations/${reservation.id}`);
+      setReservation(null); // Clear the reservation after deletion
     } catch (error) {
       console.error('Error deleting reservation:', error);
     }
   };
 
-  const handleSelectReservation = (reservationId) => {
-    const reservation = reservations.find(reservation => reservation.id === reservationId);
-    setSelectedReservation(reservation);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    setEmail('');
-    setReservations([]);
-    setSelectedReservation(null);
+  const handleMakeReservationClick = () => {
+    navigate('/reservation', { state: { email: email, isNew: true } });
   };
 
   return (
     <div>
-      <h1>Bembe</h1>
+      <h1>Manage Your Reservation</h1>
       {!isAuthenticated ? (
         <div>
           <h2>Sign In:</h2>
@@ -90,28 +69,17 @@ const ReservationManager = () => {
           />
           <button onClick={() => handleLogin(email)}>Login</button>
         </div>
+      ) : !reservation ? (
+        <div>
+          <h2>Your Reservation</h2>
+          <p>Reservation details...</p>
+          <button onClick={handleUpdateReservationClick}>Update Reservation</button>
+          <button onClick={handleDeleteReservation}>Cancel Reservation</button>
+        </div>
       ) : (
         <div>
-          <button onClick={handleLogout}>Logout</button>
-          {reservations.length > 0 ? (
-            <>
-              <h2>Your Reservations</h2>
-              {reservations.map(reservation => (
-                <div key={reservation.id}>
-                  {/* Display reservation details */}
-                  <button onClick={() => handleSelectReservation(reservation.id)}>Update</button>
-                  <button onClick={() => handleDeleteReservation(reservation.id)}>Delete</button>
-                </div>
-              ))}
-            </>
-          ) : (
-            <p>No reservations made yet.</p>
-          )}
-          {selectedReservation ? (
-            <ReservationForm reservation={selectedReservation} onSubmit={handleUpdateReservation} />
-          ) : (
-            <button onClick={() => setSelectedReservation({})}>Make A Reservation</button>
-          )}
+          <p>No reservation made yet.</p>
+          <button onClick={handleMakeReservationClick}>Make A Reservation</button>
         </div>
       )}
     </div>
