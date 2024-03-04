@@ -38,7 +38,6 @@ def users():
         users_json = [
             {
                 'id': user.id,
-                'username': user.username,
                 'email': user.user_email
             }
             for user in users
@@ -47,7 +46,6 @@ def users():
     elif request.method == 'POST':
         data = request.json
         new_user = Users(
-            username=data.get('username'),
             user_email=data.get('email'),
             passwordhash=data.get('password')  # Assuming you're storing password hash in 'passwordhash' field
         )
@@ -61,19 +59,25 @@ def users():
 @app.route('/users/login', methods=['POST'])
 def login():
     data = request.json
-    username = data.get('username')
+    user_email = data.get('user_email')
     password = data.get('password')
 
     # Query the database to find a user with the provided username
-    user = Users.query.filter_by(username=username).first()
+    user = Users.query.filter_by(user_email=user_email).first()
 
     if user and user.check_password(password):
         # If the user exists and the password matches, create an access token
         access_token = create_access_token(identity=username)
         return jsonify(access_token=access_token), 200
     else:
+<<<<<<< HEAD
         return jsonify({'message': 'Invalid username or password'}), 401
 @app.route('/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
+=======
+        return jsonify({'message': 'Invalid email or password'}), 401
+
+@app.route('/api/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
+>>>>>>> 008a1d823c50900c84457c410717a16fde3a971c
 def specific_menu_item(item_id):
     menu_item = MenuItem.query.get_or_404(item_id)
     
@@ -115,58 +119,101 @@ def menu_items():
         db.session.commit()
         return jsonify({'message': 'Menu item created successfully'}), 201
     
+<<<<<<< HEAD
 
 @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
+=======
+# Routes for Reservations
+@app.route('/api/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
+>>>>>>> 008a1d823c50900c84457c410717a16fde3a971c
 @jwt_required()
 def reservation(reservation_id):
     current_user = get_jwt_identity()
     reservation = Reservation.query.get_or_404(reservation_id)
     
     # Check if the current user is the owner of the reservation
-    if reservation.user_id != current_user:
+    if reservation.user_email != current_user:  # Assuming user_email stores the email
         return jsonify({'message': 'Unauthorized access'}), 403
     
     if request.method == 'GET':
         # Retrieve the reservation details and return as JSON response
         reservation_data = {
             'id': reservation.id,
-            'user_id': reservation.user_id,
+            'email': reservation.user_email,  # Changed from user_id to reflect email-based identification
             'date_time': reservation.date_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'party_size': reservation.party_size,
-            'special_requests': reservation.special_requests
+            'guest_size': reservation.guest_size,  # Corrected to use guest_size
+            'special_requests': reservation.special_requests,
+            'name': reservation.name,
+            'lastname': reservation.lastname,
+            'phonenumber': reservation.phonenumber,
+            'menuItems': reservation.menu_items.split(','), 
         }
         return jsonify(reservation_data), 200
 
     elif request.method == 'PUT':
         data = request.json
-        # Update reservation details if provided
+        # Update reservation details based on data
         if 'date_time' in data:
-            reservation.date_time = data['date_time']
-        if 'party_size' in data:
-            reservation.party_size = data['party_size']
+            reservation_datetime_str = f"{data['date']} {data['time']}"
+            reservation.date_time = datetime.strptime(reservation_datetime_str, '%Y-%m-%d %I:%M %p')
+        if 'guest_size' in data:  
+            reservation.guest_size = data['guest_size']
         if 'special_requests' in data:
             reservation.special_requests = data['special_requests']
+        if 'name' in data:
+            reservation.name = data['name']
+        if 'lastname' in data:
+            reservation.lastname = data['lastname']
+        if 'phonenumber' in data:
+            reservation.phonenumber = data['phonenumber']
+        if 'menuItems' in data:
+            reservation.menu_items = ','.join(data['menuItems'])
         
-        # Commit changes to the database
         db.session.commit()
         return jsonify({'message': 'Reservation updated successfully'}), 200
 
     elif request.method == 'DELETE':
-        # Delete the reservation from the database
         db.session.delete(reservation)
         db.session.commit()
         return jsonify({'message': 'Reservation deleted successfully'}), 200
-
-    else:
-        # Method not allowed
-        return jsonify({'message': 'Method not allowed'}), 405
 
 # Initialize JWT
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key
 jwt = JWTManager(app)
 
+if __name__ == '__main__':
+    app.run(debug=True, port=5555)
 
+@app.route('/api/reservations', methods=['POST'])
+@jwt_required()
+def create_reservation():
+    current_user = get_jwt_identity()
+    data = request.json
+    
+    # Convert the date and time strings to a datetime object
+    reservation_datetime_str = f"{data['date']} {data['time']}"
+    reservation_datetime = datetime.strptime(reservation_datetime_str, '%Y-%m-%d %I:%M %p')
+    
+    new_reservation = Reservation(
+        user_id=current_user,
+        name=data['name'],
+        lastname=data['lastname'],
+        email=data['email'],
+        phonenumber=data['phonenumber'],
+        date_time=reservation_datetime,
+        guest_size=data['guests'],
+        menu_items=','.join(data['menuItems']), 
+        special_requests=data.get('specialNotes', '') 
+    )
+    
+    db.session.add(new_reservation)
+    db.session.commit()
+    
+    return jsonify({'message': 'Reservation created successfully', 'id': new_reservation.id}), 201
 
+# Initialize JWT
+app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key
+jwt = JWTManager(app)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5555)

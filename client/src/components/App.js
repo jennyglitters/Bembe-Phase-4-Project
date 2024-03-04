@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import NavBar from './components/NavBar';
-import Home from './components/Home';
-import Menu from './components/Menu';
-import ReservationForm from './components/ReservationForm';
-import LocationHours from './components/Location&Hours';
-import ReservationManagement from './components/ReservationManagement';
-import './index.css';
+import NavBar from './NavBar'; // Adjusted
+import Home from './Home'; // Adjusted
+import Menu from './Menu'; // Adjusted
+import ReservationForm from './ReservationForm'; // Adjusted
+import LocationHours from './Location&Hours'; // Adjusted
+import ReservationManagement from './ReservationManagement'; // Adjusted
+import '../index.css' // This is correct
 
 function App() {
   return (

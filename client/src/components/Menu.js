@@ -54,7 +54,7 @@ const Menu = () => {
         </div>
 
         <div className="menu-item">
-          <h3>Poco Macs</h3>
+          <h3>Bembe Macs</h3>
           <p className="description">Shell pasta, our signature 3 cheese blend and panko breadcrumbs.</p>
         </div>
 
