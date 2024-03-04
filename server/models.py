@@ -13,7 +13,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
-from app import db
+
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
@@ -27,7 +27,7 @@ class Users(db.Model):
     user_email = db.Column(db.String, nullable=False)
     passwordhash = db.Column(db.String, nullable=False)
 
-    reservations = db.relationship("Reservation", back_populates="user")
+    reservations = db.relationship("Reservation", back_populates="user", foreign_keys="Reservation.user_id")
 
     def __init__(self, username, user_email, user_password):
         self.username = username
@@ -95,7 +95,7 @@ class Reservation(db.Model):
     guest_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
 
-    user = db.relationship("Users", back_populates="reservations")
+    user = db.relationship("Users", back_populates="reservations", foreign_keys=[user_id])
     menu = db.relationship("Menu", back_populates="reservations")
 
     @validates('first_name', 'last_name', 'notes', 'phone_number', 'email', 'date', 'date_time', 'user_id', 'menu_id')
@@ -108,7 +108,10 @@ class Reservation(db.Model):
             return value
         else:
             raise ValueError(f"Invalid {key}")
-    db.create_all()
 if __name__ == '__main__':
+    # This block of code will be executed when you run the script directly
+    # You can add any code here that you want to execute when the script is run
 
-
+    # For example, you might want to create your database tables
+    # You can use the create_all() method to create all tables defined in your models
+    db.create_all()
