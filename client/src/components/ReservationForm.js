@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form, Field, ErrorMessage } from 'Formik';
+import { ReactDatePicker } from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css';
 
 const Reservations = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [currentReservation, setCurrentReservation] = useState(null);
   const [submissionMessage, setSubmissionMessage] = useState('');
+  const [guests, setGuests] = useState(1);
+  const maxGuests = 8;
+  const [isMaxCapacity, setIsMaxCapacity] = useState(false);
 
   useEffect(() => {
     // Fetch menu items from the backend
@@ -34,6 +39,17 @@ const Reservations = () => {
     return errors;
   };
 
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let i = 15; i <= 23; i++) { // for times from 3 PM to 11 PM
+      slots.push(`${i < 10 ? `0${i}` : i}:00`);
+      slots.push(`${i < 10 ? `0${i}` : i}:30`);
+    }
+    // Add the last time slot for 11:30 PM
+    slots.push('23:30');
+    return slots;
+  };
+
   const handleSubmit = (values, actions) => {
     fetch('/api/reservations', {
       method: 'POST',
@@ -60,6 +76,16 @@ const Reservations = () => {
   const handleClearForm = (resetForm) => {
     resetForm();
     setSubmissionMessage('');
+  };
+
+  const handleGuestChange = (event) => {
+    const selectedGuests = Number(event.target.value);
+    if (selectedGuests > maxGuests) {
+      setIsMaxCapacity(true);
+    } else {
+      setIsMaxCapacity(false);
+      setGuests(selectedGuests);
+    }
   };
   
   return (
@@ -113,22 +139,40 @@ const Reservations = () => {
     </div>
 
     <div className="form-field">
-      <label htmlFor="date">Date</label>
-      <Field id="date" name="date" type="date" />
-      <ErrorMessage name="date" component="div" className="field-error" />
-    </div>
+        <label htmlFor="date">Date</label>
+        <ReactDatePicker
+          selected={values.date}
+          onChange={date => setFieldValue('date', date)}
+          dateFormat="MMMM d, yyyy"
+          minDate={new Date()}
+          className="form-control"
+        />
+        <ErrorMessage name="date" component="div" className="field-error" />
+      </div>
 
     <div className="form-field">
       <label htmlFor="time">Time</label>
-      <Field id="time" name="time" type="time" />
-      <ErrorMessage name="time" component="div" className="field-error" />
+      <Field as="select" id="time" name="time">
+      {generateTimeSlots().map(time => (
+      <option key={time} value={time}>{time}</option>
+      ))}
+    </Field>
+    <ErrorMessage name="time" component="div" className="field-error" />
     </div>
 
     <div className="form-field">
-      <label htmlFor="guests">Number of Guests</label>
-      <Field id="guests" name="guests" type="number" />
-      <ErrorMessage name="guests" component="div" className="field-error" />
+      <label htmlFor="guests">Number of Guests:</label>
+      <select id="guests" name="guests" value={guests} onChange={handleGuestChange}>
+      {[...Array(maxGuests)].map((_, i) => (
+      <option key={i} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
+      ))}
+      </select>
+    <ErrorMessage name="guests" component="div" className="field-error" />
     </div>
+      
+      {isMaxCapacity && (
+        <p className="capacity-message">Max Capacity is {maxGuests} currently, please select again</p>
+      )}
 
     {/* Field to select menu items */}
     <div role="group" aria-labelledby="checkbox-group" className="form-field">
