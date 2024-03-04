@@ -6,22 +6,23 @@ from config import Config
 from flask_migrate import Migrate
 from flask_restful import Api
 from models import Users, MenuItem, Reservation, Menu, MenuItemForm
-from flask_jwt_extended import jwt_required, get_jwt_identity  # Import jwt_required and get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity  
 
-# ...
 
-# Instantiate Flask app
 app = Flask(__name__)
-app.config.from_object(Config)  # Load configuration from Config class
+app.config.from_object(Config) 
+
 
 # Enable Cross-Origin Resource Sharing (CORS)
 CORS(app)
 
 # Initialize SQLAlchemy
-db = SQLAlchemy(app)
+db = SQLAlchemy()
+db.init_app(app)
 
 # Initialize Flask-Migrate
 migrate = Migrate(app, db)
+
 
 # Initialize Flask-JWT-Extended
 jwt = JWTManager(app)
