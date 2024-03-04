@@ -72,7 +72,7 @@ def login():
         return jsonify(access_token=access_token), 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 401
-@app.route('/api/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
 def specific_menu_item(item_id):
     menu_item = MenuItem.query.get_or_404(item_id)
     
@@ -94,7 +94,7 @@ def specific_menu_item(item_id):
         return jsonify({'message': 'Menu item deleted successfully'})
 
 # Routes for Menu Items
-@app.route('/api/menu_items', methods=['GET', 'POST'])
+@app.route('/menu_items', methods=['GET', 'POST'])
 def menu_items():
     if request.method == 'GET':
         menu_items = MenuItem.query.all()
@@ -115,7 +115,7 @@ def menu_items():
         return jsonify({'message': 'Menu item created successfully'}), 201
     
 
-@app.route('/api/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def reservation(reservation_id):
     current_user = get_jwt_identity()
