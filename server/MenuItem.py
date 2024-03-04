@@ -7,9 +7,6 @@ from config import app, db, api
 from models import MenuItem
 from flask_migrate import Migrate
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -36,7 +33,7 @@ def menu_item(item_id):
 
 # Routes for Menu Items
 @app.route('/api/menu_items', methods=['GET', 'POST'])
-def menu_items():
+def menu_item():
     if request.method == 'GET':
         menu_items = MenuItem.query.all()
         menu_items_json = [

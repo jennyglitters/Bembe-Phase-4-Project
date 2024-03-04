@@ -5,21 +5,19 @@ from flask_jwt_extended import JWTManager
 import re
 import bcrypt
 from datetime import datetime
-from sqlalchemy.orm import validates
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField
 from wtforms.validators import InputRequired, Length, NumberRange
+from sqlalchemy import MetaData
+from sqlalchemy.orm import validates
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy_serializer import SerializerMixin
+from app import db
 
-app = Flask(__name__)
-CORS(app)  
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your-secret-key'
+metadata = MetaData()
+db = SQLAlchemy(metadata=metadata)
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-jwt = JWTManager(app)
 
 class Users(db.Model):
     __tablename__ = "users"
@@ -41,7 +39,6 @@ class Users(db.Model):
 
     def set_password(self, password):
         self.passwordhash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        return password == self.passwordhash
 
     @validates('username', 'passwordhash', 'user_email')
     def validate_fields(self, key, value):
@@ -111,6 +108,7 @@ class Reservation(db.Model):
             return value
         else:
             raise ValueError(f"Invalid {key}")
-
+    db.create_all()
 if __name__ == '__main__':
-    app.run(debug=True, port=5555)
+
+
