@@ -115,7 +115,7 @@ class Reservation(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     guest_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
-
+    menu = db.relationship("Menu", back_populates="reservations", foreign_keys=[menu_id])
     user = db.relationship("Users", back_populates="reservations", foreign_keys=[user_id])
     menu_items = db.relationship("MenuItem", secondary='reservation_menu_item', back_populates="reservations")
     reservation_menu_item = db.Table('reservation_menu_item',
