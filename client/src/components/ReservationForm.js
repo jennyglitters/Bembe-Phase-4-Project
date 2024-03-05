@@ -3,7 +3,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const Reservations = () => {
+const ReservationForm = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [currentReservation, setCurrentReservation] = useState(null);
   const [submissionMessage, setSubmissionMessage] = useState('');
@@ -46,8 +46,6 @@ const Reservations = () => {
       slots.push(`${hour}:00 ${i >= 12 ? 'PM' : 'AM'}`);
       slots.push(`${hour}:30 ${i >= 12 ? 'PM' : 'AM'}`);
     }
-    // Making sure the last time slot for 11:30 PM is included
-    slots.push('11:30 PM');
     return slots;
   };
 
@@ -237,4 +235,4 @@ const Reservations = () => {
   );
 };
 
-export default Reservations;
+export default ReservationForm;

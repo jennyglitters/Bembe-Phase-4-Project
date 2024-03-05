@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const ReservationManager = () => {
+const ReservationManagement = () => {
   const [email, setEmail] = useState('');
   const [reservation, setReservation] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,7 +52,7 @@ const ReservationManager = () => {
   };
 
   const handleMakeReservationClick = () => {
-    navigate('/reservation', { state: { email: email, isNew: true } });
+    navigate('/reservations');
   };
 
   return (
@@ -69,21 +69,22 @@ const ReservationManager = () => {
           />
           <button onClick={() => handleLogin(email)}>Login</button>
         </div>
-      ) : !reservation ? (
+      ) : null}
+      {!reservation ? (
+        <div>
+          <p>No reservation made yet.</p>
+          <button onClick={handleMakeReservationClick}>Make A Reservation</button>
+        </div>
+      ) : (
         <div>
           <h2>Your Reservation</h2>
           <p>Reservation details...</p>
           <button onClick={handleUpdateReservationClick}>Update Reservation</button>
           <button onClick={handleDeleteReservation}>Cancel Reservation</button>
         </div>
-      ) : (
-        <div>
-          <p>No reservation made yet.</p>
-          <button onClick={handleMakeReservationClick}>Make A Reservation</button>
-        </div>
       )}
     </div>
   );
-};
+}
 
-export default ReservationManager;
+export default ReservationManagement;

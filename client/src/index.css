@@ -1,3 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inknut+Antiqua:wght@400;700&display=swap');
+
+/* Left section of the header for the logo or title */
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-size: 2.5rem; /* Large font size for the logo */
+  margin-right: auto; /* Ensures it stays on the left */
+}
+
+body {
+  font-family: 'Inknut Antiqua', serif;
+  margin: 0;
+  padding: 0;
+  background-color: #fff; 
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem; /* Adjust the padding as needed */
+  background-color: #f8f9fa; /* Example background color */
+}
+
+/* Delivery info styles */
+.delivery-info {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Nav links styles */
+.nav-links {
+  display: flex;
+  justify-content: flex-end; /* Aligns the navigation to the right */
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333; /* Color for the links */
+  padding: 0.5rem 1rem; /* Spacing around the links */
+  font-weight: bold;
+}
+
+.nav-links a:not(:last-child) {
+  margin-right: 1rem; /* Adds separation between the links */
+}
+
+/* Active link styles */
+.nav-links .active {
+  border-bottom: 2px solid #333;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 2rem; /* Adjust padding as needed */
+  border-bottom: 1px solid #ccc; /* Adds a line under the top bar */
+  background-color: #f8f9fa; /* Example background color */
+}
+
+.delivery-info span, 
+.delivery-info a {
+  margin-right: 1rem; /* Adds space between 'free delivery' and the phone number */
+  white-space: nowrap; /* Keeps the text together without breaking */
+}
+
+/* Manage reservation styles */
+.manage-reservation {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.manage-reservation a {
+  text-decoration: none;
+  color: #333;
+  padding: 0.5rem 1rem;
+}
+
+.active {
+  border-bottom: 2px solid #000; /* black line */
+}
+
+.nav-links a:not(:last-child) {
+  margin-right: 1rem;
+}
+
 :root {
   --bg: #282c34;
   --header: #fff;
@@ -5,7 +100,6 @@
   --text: hsla(0, 0%, 100%, 0.88);
 }
 
-/* 
 .location-hours-container {
   position: relative;
   background-size: cover;
@@ -18,7 +112,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 2; /* Ensure the map appears above the background image 
+  z-index: 2; 
 }
 
 .location-map {
@@ -32,4 +126,4 @@
   z-index: 3; 
   color: white; 
 } 
-*/
+
