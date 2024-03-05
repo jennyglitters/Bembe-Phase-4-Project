@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
-from config import Config
+from config import db
 from flask_migrate import Migrate
 from flask_restful import Api
 from models import Users, MenuItem, Reservation, Menu, MenuItemForm
@@ -10,7 +10,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
 app = Flask(__name__)
-app.config.from_object(Config) 
+app.config.from_object(db.config) 
 
 
 # Enable Cross-Origin Resource Sharing (CORS)
@@ -174,7 +174,6 @@ def create_reservation():
     # Convert the date and time strings to a datetime object
     reservation_datetime_str = f"{data['date']} {data['time']}"
     reservation_datetime = datetime.strptime(reservation_datetime_str, '%Y-%m-%d %I:%M %p')
-    
     new_reservation = Reservation(
         user_id=current_user,
         name=data['name'],

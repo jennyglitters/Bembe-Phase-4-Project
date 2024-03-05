@@ -13,7 +13,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
-
+from config import db
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
@@ -132,6 +132,8 @@ class Reservation(db.Model, SerializerMixin):
             return value
         else:
             raise ValueError(f"Invalid {key}")
+        def __repr__(self):
+        return f'< {self.id}, {self.user_id}, {self._id}>'
 
 if __name__ == '__main__':
     with app.app_context():

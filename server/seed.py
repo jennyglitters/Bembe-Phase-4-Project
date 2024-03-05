@@ -6,7 +6,7 @@ from app import app
 from models import db, Users, Menu, Reservation, MenuItem, MenuItemForm
 CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins as needed
 app = create_app()
-
+from config import db
 def seed_data():
     with app.app_context():  # This will push an application context
         # Create some users
