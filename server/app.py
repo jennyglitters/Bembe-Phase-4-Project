@@ -14,7 +14,7 @@ app.config.from_object(db.config)
 
 
 # Enable Cross-Origin Resource Sharing (CORS)
-CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins as needed
+CORS(app, resources={r"/*": {"origins": "*"}})  # Adjusted to allow all routes
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
@@ -57,32 +57,44 @@ def login():
     data = request.json
     user = Users.query.filter_by(user_email=data['email']).first()
 
-
-    if user and user.check_password(data['password']):
-        # If the user exists and the password matches, create an access token
+    if user:
+        # If the user exists, create an access token
         access_token = create_access_token(identity=user.id)
         return jsonify(access_token=access_token), 200
     else:
-        return jsonify({'message': 'Invalid email or password'}), 401
+        return jsonify({'message': 'User not found'}), 404
 
+@app.route('/reservations', methods=['GET'])
+def get_reservation_by_email():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Missing email query parameter"}), 400
+    
+    reservation = Reservation.query.filter_by(email=email).order_by(desc(Reservation.date_time)).first()
+    if reservation:
+        return jsonify(reservation.serialize()), 200  # Assuming your model has a serialize method to convert to dict
+    else:
+        return jsonify({"message": "No reservation found for the provided email"}), 404
+
+# Routes for Menu Items by ID
 @app.route('/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
 def specific_menu_item(item_id):
-    menu_item = MenuItem.query.get_or_404(item_id)
+    menuItem = MenuItem.query.get_or_404(item_id)
     
     if request.method == 'GET':
         return jsonify({
-            'id': menu_item.id,
-            'name': menu_item.name,
-            'price': menu_item.price
+            'id': menuItem.id,
+            'name': menuItem.name,
+            'price': menuItem.price
         })
     elif request.method == 'PUT':
         data = request.json
-        menu_item.name = data['name']
-        menu_item.price = data['price']
+        menuItem.name = data['name']
+        menuItem.price = data['price']
         db.session.commit()
         return jsonify({'message': 'Menu item updated successfully'})
     elif request.method == 'DELETE':
-        db.session.delete(menu_item)
+        db.session.delete(menuItem)
         db.session.commit()
         return jsonify({'message': 'Menu item deleted successfully'})
 
@@ -124,12 +136,12 @@ def handle_reservation(reservation_id):
             'id': reservation.id,
             'email': reservation.user_email,  # Changed from user_id to reflect email-based identification
             'date_time': reservation.date_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'guest_size': reservation.guest_size,  # Corrected to use guest_size
-            'special_requests': reservation.special_requests,
+            'guest_size': reservation.guests,  # Corrected to use guest_size
+            'special_notes': reservation.special_notes,
             'name': reservation.name,
             'lastname': reservation.lastname,
             'phonenumber': reservation.phonenumber,
-            'menuItems': reservation.menu_items.split(','), 
+            'menuItems': reservation.menuItems.split(','), 
         }
         return jsonify(reservation_data), 200
 
@@ -139,10 +151,10 @@ def handle_reservation(reservation_id):
         if 'date_time' in data:
             reservation_datetime_str = f"{data['date']} {data['time']}"
             reservation.date_time = datetime.strptime(reservation_datetime_str, '%Y-%m-%d %I:%M %p')
-        if 'guest_size' in data:  
-            reservation.guest_size = data['guest_size']
-        if 'special_requests' in data:
-            reservation.special_requests = data['special_requests']
+        if 'guests' in data:  
+            reservation.guests = data['guests']
+        if 'special_notes' in data:
+            reservation.special_notes = data['special_notes']
         if 'name' in data:
             reservation.name = data['name']
         if 'lastname' in data:
@@ -160,35 +172,35 @@ def handle_reservation(reservation_id):
         db.session.commit()
         return jsonify({'message': 'Reservation deleted successfully'}), 200
 
-# Initialize JWT
-app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key
-jwt = JWTManager(app)
-
-
 @app.route('/reservations', methods=['POST'])
 @jwt_required()
 def create_reservation():
     current_user = get_jwt_identity()
     data = request.json
+<<<<<<< HEAD
     
     # Convert the date and time strings to a datetime object
     reservation_datetime_str = f"{data['date']} {data['time']}"
     reservation_datetime = datetime.strptime(reservation_datetime_str, '%Y-%m-%d %I:%M %p')
+=======
+
+    # Parse date and time from the frontend format
+    reservation_datetime = datetime.strptime(f"{data['date']} {data['time']}", '%Y-%m-%d %I:%M %p')
+
+    # Adjusting to use 'specialNotes' as received from the frontend
+>>>>>>> 82344ca2c6496bb639f513b0ecf3263e5c2add85
     new_reservation = Reservation(
         user_id=current_user,
-        name=data['name'],
-        lastname=data['lastname'],
         email=data['email'],
-        phonenumber=data['phonenumber'],
         date_time=reservation_datetime,
         guest_size=data['guests'],
-        menu_items=','.join(data['menuItems']), 
-        special_requests=data.get('specialNotes', '') 
+        menuItems=",".join(data['menuItems']),  # Assuming menuItems is an array of strings
+        specialNotes=data.get('specialNotes', '')  # Adjusted field name to match frontend
     )
-    
+
     db.session.add(new_reservation)
     db.session.commit()
-    
+
     return jsonify({'message': 'Reservation created successfully', 'id': new_reservation.id}), 201
 
 @app.route('/user_reservations', methods=['GET'])
