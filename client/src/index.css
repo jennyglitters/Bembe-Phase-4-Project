@@ -15,7 +15,7 @@ body {
   font-family: 'Inknut Antiqua', serif;
   margin: 0;
   padding: 0;
-  background-color: #fff; 
+  background-color: #f8f9fa; 
 }
 
 .navbar {
@@ -25,6 +25,26 @@ body {
   padding: 1rem 2rem; /* Adjust the padding as needed */
   background-color: #f8f9fa; /* Example background color */
 }
+
+/* Home */
+.info-content h1,
+.info-content h2,
+.info-content p,
+.info-content address {
+  color: black; /* Ensures all text is black */
+  margin: 10px 0; /* Spacing between elements */
+}
+
+.info-content {
+  text-align: center;
+  padding: 20px; /* Adjust padding to your preference */
+}
+
+.info-content {
+  position: relative;
+  top: 500px; /* Adjust this value to move content up or down relative to your background image */
+}
+
 
 /* Delivery info styles */
 .delivery-info {
@@ -126,4 +146,68 @@ body {
   z-index: 3; 
   color: white; 
 } 
+
+
+/* General form styling */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Align form elements to the start of the flex container */
+  max-width: 500px; /* Adjust the width as needed */
+  margin: 0 auto; /* Center the form in the middle of the page */
+}
+
+/* Style each form field */
+.form-field {
+  margin-bottom: 20px; /* Add space between form fields */
+  width: 100%; /* Make form fields full width */
+}
+
+/* Style for labels */
+label {
+  display: block; /* Ensure the label takes up the full width */
+  margin-bottom: 5px; /* Add some space between the label and the input */
+  font-weight: bold; /* Optional: make labels bold */
+}
+
+/* Style for inputs */
+input, select, textarea {
+  width: 100%; /* Make inputs take up the full width of .form-field */
+  padding: 10px; /* Add some padding inside inputs */
+  border: 1px solid #ccc; /* Add a border to the inputs */
+  border-radius: 4px; /* Optional: round the borders */
+}
+
+/* Container for buttons */
+.buttons-container {
+  display: flex;
+  justify-content: flex-start; /* Align buttons to the start of the container */
+  gap: 10px; /* Add some space between buttons */
+  margin-top: 20px; /* Space above the button container */
+}
+
+/* Style for the clear form button */
+button.clear-form-button, button.submit-button {
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  color: #333; /* Text color for the clear button */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+  margin-left:150px;
+}
+
+/* Add styles for hover effects */
+button.submit-button:hover,
+button.clear-form-button:hover {
+  opacity: 0.9; /* Slight opacity change on hover */
+}
+
+/* Specific styles for error messages */
+.field-error {
+  color: red; /* Color error messages in red */
+  margin-top: 5px; /* Space between the input and the error message */
+}
 

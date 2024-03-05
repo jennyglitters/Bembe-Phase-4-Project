@@ -1,14 +1,9 @@
 import React from 'react';
 
-const LocationAndHours = () => {
+const Home = () => {
   return (
-    <div className="location-hours-container" style={{ backgroundImage: 'url(/shrimp.jpg)' }}>
+    <div className="location-hours-container" style={{ backgroundImage: 'url(/spanish-food.jpg)' }}>
       <div className="map-overlay">
-        <img
-          src="/BembeDirections.png"
-          alt="Directions to Bembe"
-          className="location-map"
-        />
       </div>
       <div className="info-content">
         <h1>Bembe Puerto Rican Dominican Fusion</h1>
@@ -25,4 +20,6 @@ const LocationAndHours = () => {
   );
 };
 
-export default LocationAndHours;
+export default Home;
+
+
