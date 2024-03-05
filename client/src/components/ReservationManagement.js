@@ -9,6 +9,11 @@ const ReservationManagement = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
       const foundUser = JSON.parse(loggedInUser);
@@ -18,105 +23,27 @@ const ReservationManagement = () => {
     }
   }, []);
 
-  const handleLogin = async (email, password) => {
+const handleLogin = async (email) => {
+  try {
+    const response = await axios.post('/users/login', { email });
+    const { access_token } = response.data;
+    localStorage.setItem('token', access_token); // Storing the token
+    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`; // Setting the default header
+    setIsAuthenticated(true);
+    // Further actions after successful login
+  } catch (error) {
+    console.error('Login failed:', error);
+  }
+};
+
+  //Visitor's email is used to fetch the reservation
+  const fetchReservation = async (email) => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/users/login`, {
-        user_email: email,
-        password,
-      });
-      if (response.status === 200) {
-        const { access_token } = response.data;
-        localStorage.setItem('access_token', access_token);
-        setIsAuthenticated(true);
-      } else {
-        console.error('Login failed:');
-        setIsAuthenticated(false);
-      }
+      const response = await axios.get(`/reservations?email=${email}`);
+      setReservation(response.data); // Assuming the backend returns the most recent reservation for this email
     } catch (error) {
-      console.error('Login failed:', error);
-      setIsAuthenticated(false);
+      console.error('Error fetching reservation:', error);
     }
-  };
-
-  const updateReservation = async (reservationId, updatedData) => {
-    try {
-      const response = await axios.put(`${process.env.REACT_APP_API_URL}/reservations/${reservationId}`, updatedData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (response.status === 200) {
-        console.log("Reservation updated successfully");
-      } else {
-        console.error('Failed to update reservation');
-      }
-    } catch (error) {
-      console.error('Failed to update reservation:', error);
-    }
-  };
-
-  const deleteReservation = async (reservationId) => {
-    try {
-      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/reservations/${reservationId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (response.status === 200) {
-        console.log("Reservation deleted successfully");
-        setReservation(null);
-      } else {
-        console.error('Failed to delete reservation');
-      }
-    } catch (error) {
-      console.error('Failed to delete reservation:', error);
-    }
-  };
-
-  const fetchReservation = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/reservations/your-reservation-id`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (response.status === 200) {
-        setReservation(response.data);
-      } else {
-        console.error('Failed to fetch reservation');
-      }
-    } catch (error) {
-      console.error('Failed to fetch reservation:', error);
-    }
-  };
-
-  const fetchUserReservations = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/user_reservations`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (response.status === 200) {
-        const data = response.data;
-        setReservation(data.length > 0 ? data[0] : null);
-      } else {
-        console.error('Failed to fetch reservations');
-      }
-    } catch (error) {
-      console.error('Failed to fetch reservations:', error);
-    }
-  };
-
-  const handleLoginClick = () => {
-    navigate('/login');
   };
 
   const handleUpdateReservationClick = () => {
@@ -124,12 +51,11 @@ const ReservationManagement = () => {
   };
 
   const handleDeleteReservation = async () => {
-    if (reservation && reservation.id) {
-      try {
-        await deleteReservation(reservation.id);
-      } catch (error) {
-        console.error('Error deleting reservation:', error);
-      }
+    try {
+      await axios.delete(`/reservations/${reservation.id}`);
+      setReservation(null); // Clear the reservation after deletion
+    } catch (error) {
+      console.error('Error deleting reservation:', error);
     }
   };
 
@@ -170,3 +96,5 @@ const ReservationManagement = () => {
 }
 
 export default ReservationManagement;
+
+

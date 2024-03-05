@@ -78,6 +78,35 @@ body {
   border-bottom: 2px solid #333;
 }
 
+/* More nav-link styles */
+.nav-links a {
+  position: relative;
+  color: #333;
+  text-decoration: none;
+  padding: 0 1em;
+  transition: all 0.3s ease;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #333;
+  transform: scaleX(0);
+  transition: all 0.3s ease;
+}
+
+.nav-links a:hover::after {
+  transform: scaleX(1);
+}
+
+.nav-links a.active::after {
+  transform: scaleX(1);
+}
+
 .top-bar {
   display: flex;
   justify-content: space-between;
@@ -187,7 +216,19 @@ input, select, textarea {
 }
 
 /* Style for the clear form button */
-button.clear-form-button, button.submit-button {
+button.clear-form-button {
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  color: #333; /* Text color for the clear button */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+  margin-left:170px;
+}
+
+button.submit-button {
   padding: 10px 20px;
   background-color: #f8f9fa;
   color: #333; /* Text color for the clear button */
@@ -205,9 +246,137 @@ button.clear-form-button:hover {
   opacity: 0.9; /* Slight opacity change on hover */
 }
 
+/*Location and Hours*/
+.location-hours {
+  max-width: 800px; /* Or whatever maximum width you prefer */
+  margin: 0 auto; /* Centers the container */
+  padding: 20px; /* Adds some padding around the content */
+  background-color: #f8f9fa; /* A light background color for the container */
+  border-radius: 8px; /* Optional: rounds the corners */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds a subtle shadow */
+  text-align: center; /* Centers the text inside */
+}
+
+.location-hours h1,
+.location-hours h2,
+.location-hours p,
+.location-hours address {
+  color: #333; /* Dark grey color for text */
+  margin-bottom: 1rem; /* Adds space between each text element */
+}
+
+.location-hours a {
+  color: #0066cc; /* A blue color for the phone number link */
+  text-decoration: none; /* Removes underline from the link */
+}
+
+.location-map {
+  max-width: 100%; /* Ensures the image is not larger than its container */
+  height: auto; /* Keeps the image aspect ratio */
+  margin-top: 2rem; /* Adds space above the map image */
+}
+
+.hours-of-operation {
+  background-color: #ffffff; /* White background for the hours box */
+  color: #333; /* Dark text color for contrast */
+  padding: 1rem; /* Spacing inside the hours box */
+  margin-top: 2rem; /* Space above the hours box */
+  display: inline-block; /* Makes the div behave like an inline element */
+  text-align: left; /* Aligns the text to the left inside the hours box */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Same subtle shadow as the container */
+}
+
 /* Specific styles for error messages */
 .field-error {
   color: red; /* Color error messages in red */
   margin-top: 5px; /* Space between the input and the error message */
 }
 
+/* Menu */
+.menu-container {
+  width: 80%;
+  margin: auto;
+  font-family: Arial, sans-serif;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  padding: 2em;
+  background-color: #fff;
+  border-radius: 10px;
+}
+
+.menu-section {
+  margin-bottom: 2em;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 1em;
+  transition: all 0.3s ease;
+}
+
+.menu-section:hover {
+  transform: scale(1.01);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-section h2 {
+  color: #333;
+  font-size: 2em;
+  margin-bottom: 1em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.menu-item {
+  margin-bottom: 1.5em;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  transform: scale(1.01);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item h3 {
+  color: #333;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+  text-transform: uppercase;
+}
+
+.price {
+  color: #666;
+  font-size: 1.2em;
+  margin-bottom: 0.5em;
+}
+
+.description {
+  color: #666;
+  font-size: 1em;
+  line-height: 1.5em;
+}
+
+/* Reservation Management */
+.reservation-container input[type="email"] {
+  width: 50%; /* Reduced width */
+  padding: 0.5em;
+  margin: 1em 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.reservation-container button {
+  padding: 0.5em 1em;
+  color: #fff;
+  background-color: #333;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Added shadow */
+}
+
+.reservation-container button:hover {
+  background-color: #666;
+  transform: scale(1.05); /* Added scale effect */
+}
+
+.reservation-container button:active {
+  transform: scale(1); /* Reset scale when button is clicked */
+}
