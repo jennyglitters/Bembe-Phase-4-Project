@@ -19,8 +19,7 @@ migrate = Migrate(app, db)
 db.init_app(app)
 
 # Instantiate CORS
-CORS(app)
-
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins as needed
 class Config:
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'

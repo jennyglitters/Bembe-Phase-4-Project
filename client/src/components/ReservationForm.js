@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import axios from 'axios';
 
 const ReservationForm = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -13,16 +14,17 @@ const ReservationForm = () => {
 
   useEffect(() => {
     // Fetch menu items from the backend
-    fetch('/api/menu-items')
-      .then((response) => response.json())
-      .then((data) => setMenuItems(data))
+    axios.get(`${process.env.REACT_APP_API_URL}/menu_items`)
+      .then((response) => {
+        setMenuItems(response.data);
+      })
       .catch((error) => console.error('Error fetching menu items:', error));
   }, []);
 
   const validate = values => {
     const errors = {};
-    if (!values.name) errors.name = 'Required';
-    if (!values.lastname) errors.lastname = 'Required';
+    if (!values.name) errors.name = 'Name is required';
+    if (!values.lastname) errors.lastname = 'Last name is required';
     if (!values.email) {
       errors.email = 'Required';
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
@@ -33,43 +35,25 @@ const ReservationForm = () => {
     if (!values.time) errors.time = 'Required';
     if (!values.guests) {
       errors.guests = 'Required';
-    } else if (isNaN(values.guests) || values.guests < 1 || values.guests > 20) {
-      errors.guests = 'Must be a number between 1 and 20';
+    } else if (isNaN(values.guests) || values.guests < 1 || values.guests > maxGuests) {
+      errors.guests = `Must be a number between 1 and ${maxGuests}`;
     }
     return errors;
   };
 
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let i = 15; i <= 23; i++) {
-      const hour = i % 12 === 0 ? 12 : i % 12;
-      slots.push(`${hour}:00 ${i >= 12 ? 'PM' : 'AM'}`);
-      slots.push(`${hour}:30 ${i >= 12 ? 'PM' : 'AM'}`);
-    }
-    return slots;
-  };
-
   const handleSubmit = (values, actions) => {
-    fetch('/api/reservations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    })
-    .then(data => {
-      setCurrentReservation(data);
-      setSubmissionMessage('Reservation created successfully!');
-      actions.resetForm();
-    })
-    .catch(error => {
-      console.error('Error creating reservation:', error);
-      setSubmissionMessage('Failed to create reservation. Please try again.');
-      actions.setErrors({ submit: 'There was a problem creating your reservation.' });
-    })
-    .finally(() => actions.setSubmitting(false));
+    axios.post(`${process.env.REACT_APP_API_URL}/reservations`, values)
+      .then(response => {
+        setCurrentReservation(response.data);
+        setSubmissionMessage('Reservation created successfully!');
+        actions.resetForm();
+      })
+      .catch(error => {
+        console.error('Error creating reservation:', error);
+        setSubmissionMessage('Failed to create reservation. Please try again.');
+        actions.setErrors({ submit: 'There was a problem creating your reservation.' });
+      })
+      .finally(() => actions.setSubmitting(false));
   };
 
   const handleClearForm = (resetForm) => {
@@ -81,14 +65,10 @@ const ReservationForm = () => {
 
   const handleGuestChange = (event) => {
     const selectedGuests = Number(event.target.value);
-    if (selectedGuests > maxGuests) {
-      setIsMaxCapacity(true);
-    } else {
-      setIsMaxCapacity(false);
-      setGuests(selectedGuests);
-    }
+    setGuests(selectedGuests);
+    setIsMaxCapacity(selectedGuests > maxGuests);
   };
-  
+
   return (
     <div>
       <h2>Make a Reservation</h2>
@@ -106,9 +86,9 @@ const ReservationForm = () => {
           time: '',
           guests: '',
           menuItems: [], // Holds selected menu items
-          date: ''
+          date: null,
+          specialNotes: ''
         }}
-        // Validation logic 
         validate={validate}
         onSubmit={handleSubmit}
       >
@@ -169,7 +149,7 @@ const ReservationForm = () => {
               </select>
               <ErrorMessage name="guests" component="div" className="field-error" />
             </div>
-            
+
             {isMaxCapacity && (
               <p className="capacity-message">Max Capacity is {maxGuests} currently, please select again</p>
             )}
@@ -195,7 +175,7 @@ const ReservationForm = () => {
                 </label>
               ))}
             </div>
-            
+
             {/* Field for Special Notes */}
             <div className="form-field">
               <label htmlFor="specialNotes">Special Notes</label>
@@ -230,7 +210,6 @@ const ReservationForm = () => {
           )}
         </div>
       )}
-
     </div>
   );
 };

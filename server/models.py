@@ -19,18 +19,16 @@ metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
 
 
-class Users(db.Model):
+class Users(db.Model, SerializerMixin):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, nullable=False)
-    user_email = db.Column(db.String, nullable=False)
+    user_email = db.Column(db.String, unique=True, nullable=False)
     passwordhash = db.Column(db.String, nullable=False)
 
     reservations = db.relationship("Reservation", back_populates="user", foreign_keys="Reservation.user_id")
 
-    def __init__(self, username, user_email, user_password):
-        self.username = username
+    def __init__(self, user_email, user_password):
         self.user_email = user_email
         self.set_password(user_password)
 
@@ -42,19 +40,17 @@ class Users(db.Model):
         
         
         
-    @validates('username', 'passwordhash', 'user_email')
+    @validates('passwordhash', 'user_email')
     def validate_fields(self, key, value):
-         if key == 'username' and 0 < len(value) <= 25:
-            return value
-         elif key == 'passwordhash' and len(value) == 60:  # Adjusted validation for bcrypt hash
-            return value
-         elif key == 'user_email' and re.match(r"[^@]+@[^@]+\.[^@]+", value):
-            return value
-         else:
+         if key == 'passwordhash' and len(value) != 60:  # Adjusted validation for bcrypt hash
+             raise ValueError(f"Invalid password hash")
+         elif key == 'user_email' and not re.match(r"[^@]+@[^@]+\.[^@]+", value):
              raise ValueError(f"Invalid {key}")
+         else:
+             return value
 
 
-class MenuItem(db.Model):
+class MenuItem(db.Model,SerializerMixin):
     def serialize(self):
         return {
             'id': self.id,
@@ -68,12 +64,13 @@ class MenuItem(db.Model):
     price = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     menu_id = db.Column(db.Integer, db.ForeignKey("menus.id"))
+    reservations = db.relationship('Reservation', secondary='reservation_menu_item', back_populates='menu_items')
 
 class MenuItemForm(FlaskForm):
     name = StringField('Name', validators=[InputRequired(), Length(min=1, max=25)])
     description = StringField('Description', validators=[InputRequired(), Length(min=1, max=25)])
     price = FloatField('Price', validators=[InputRequired(), NumberRange(min=0.01)])
-class Menu(db.Model):
+class Menu(db.Model, SerializerMixin):
     __tablename__ = "menus"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -92,7 +89,7 @@ class Menu(db.Model):
         else:
             raise ValueError(f"Invalid {key}")
 
-class Reservation(db.Model):
+class Reservation(db.Model, SerializerMixin):
     def serialize(self):
         return {
             'id': self.id,
@@ -120,8 +117,11 @@ class Reservation(db.Model):
     menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
 
     user = db.relationship("Users", back_populates="reservations", foreign_keys=[user_id])
-    menu = db.relationship("Menu", back_populates="reservations")
-
+    menu_items = db.relationship("MenuItem", secondary='reservation_menu_item', back_populates="reservations")
+    reservation_menu_item = db.Table('reservation_menu_item',
+                                     db.Column('reservation_id', db.Integer, db.ForeignKey('reservation.id'), primary_key=True),
+                                     db.Column('menu_item_id', db.Integer, db.ForeignKey('menu_item.id'), primary_key=True)
+)
     @validates('first_name', 'last_name', 'notes', 'phone_number', 'email', 'date', 'date_time', 'user_id', 'menu_id')
     def validate_fields(self, key, value):
         if isinstance(value, str) and 0 < len(value) <= 1000:

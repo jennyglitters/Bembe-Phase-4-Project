@@ -7,14 +7,14 @@ from flask_migrate import Migrate
 from flask_restful import Api
 from models import Users, MenuItem, Reservation, Menu, MenuItemForm
 from flask_jwt_extended import jwt_required, get_jwt_identity  
-
+from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(Config) 
 
 
 # Enable Cross-Origin Resource Sharing (CORS)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins as needed
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
@@ -22,10 +22,6 @@ db.init_app(app)
 
 # Initialize Flask-Migrate
 migrate = Migrate(app, db)
-
-
-# Initialize Flask-JWT-Extended
-jwt = JWTManager(app)
 
 # Initialize REST API
 api = Api(app)
@@ -59,11 +55,7 @@ def users():
 @app.route('/users/login', methods=['POST'])
 def login():
     data = request.json
-    user_email = data.get('user_email')
-    password = data.get('password')
-
-    # Query the database to find a user with the provided username
-    user = Users.query.filter_by(user_email=data['user_email']).first()
+    user = Users.query.filter_by(user_email=data['email']).first()
 
 
     if user and user.check_password(data['password']):
@@ -103,11 +95,12 @@ def get_menu_items():
             {
                 'id': item.id,
                 'name': item.name,
-                'price': item.price
+                'price': item.price,
+                'description': item.description
             }
             for item in menu_items
         ]
-        return jsonify([item.serialize() for item in menu_items]), 200
+        return jsonify(menu_items_json), 200
     elif request.method == 'POST':
         data = request.json
         new_menu_item = MenuItem(name=data['name'], price=data['price'])
@@ -118,7 +111,7 @@ def get_menu_items():
 # Routes for Reservations
 @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
-def reservation(reservation_id):
+def handle_reservation(reservation_id):
     current_user_id = get_jwt_identity()
     reservation = Reservation.query.get_or_404(reservation_id)
     
@@ -127,7 +120,6 @@ def reservation(reservation_id):
         return jsonify({'message': 'Unauthorized access'}), 403
     
     if request.method == 'GET':
-        # Retrieve the reservation details and return as JSON response
         reservation_data = {
             'id': reservation.id,
             'email': reservation.user_email,  # Changed from user_id to reflect email-based identification
@@ -172,8 +164,6 @@ def reservation(reservation_id):
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key
 jwt = JWTManager(app)
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5555)
 
 @app.route('/reservations', methods=['POST'])
 @jwt_required()
@@ -202,7 +192,7 @@ def create_reservation():
     
     return jsonify({'message': 'Reservation created successfully', 'id': new_reservation.id}), 201
 
-@app.route('/api/user_reservations', methods=['GET'])
+@app.route('/user_reservations', methods=['GET'])
 @jwt_required()
 def get_user_reservations():
     current_user_id = get_jwt_identity()
