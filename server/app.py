@@ -63,21 +63,17 @@ def login():
     password = data.get('password')
 
     # Query the database to find a user with the provided username
-    user = Users.query.filter_by(user_email=user_email).first()
+    user = Users.query.filter_by(user_email=data['user_email']).first()
 
-    if user and user.check_password(password):
+
+    if user and user.check_password(data['password']):
         # If the user exists and the password matches, create an access token
-        access_token = create_access_token(identity=username)
+        access_token = create_access_token(identity=user.id)
         return jsonify(access_token=access_token), 200
     else:
-<<<<<<< HEAD
-        return jsonify({'message': 'Invalid username or password'}), 401
-@app.route('/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
-=======
         return jsonify({'message': 'Invalid email or password'}), 401
 
-@app.route('/api/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
->>>>>>> 008a1d823c50900c84457c410717a16fde3a971c
+@app.route('/menu_items/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
 def specific_menu_item(item_id):
     menu_item = MenuItem.query.get_or_404(item_id)
     
@@ -100,7 +96,7 @@ def specific_menu_item(item_id):
 
 # Routes for Menu Items
 @app.route('/menu_items', methods=['GET', 'POST'])
-def menu_items():
+def get_menu_items():
     if request.method == 'GET':
         menu_items = MenuItem.query.all()
         menu_items_json = [
@@ -111,7 +107,7 @@ def menu_items():
             }
             for item in menu_items
         ]
-        return jsonify(menu_items_json)
+        return jsonify([item.serialize() for item in menu_items]), 200
     elif request.method == 'POST':
         data = request.json
         new_menu_item = MenuItem(name=data['name'], price=data['price'])
@@ -119,20 +115,15 @@ def menu_items():
         db.session.commit()
         return jsonify({'message': 'Menu item created successfully'}), 201
     
-<<<<<<< HEAD
-
-@app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
-=======
 # Routes for Reservations
-@app.route('/api/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
->>>>>>> 008a1d823c50900c84457c410717a16fde3a971c
+@app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def reservation(reservation_id):
-    current_user = get_jwt_identity()
+    current_user_id = get_jwt_identity()
     reservation = Reservation.query.get_or_404(reservation_id)
     
     # Check if the current user is the owner of the reservation
-    if reservation.user_email != current_user:  # Assuming user_email stores the email
+    if reservation.user_id != current_user_id:  # Assuming user_email stores the email
         return jsonify({'message': 'Unauthorized access'}), 403
     
     if request.method == 'GET':
@@ -184,7 +175,7 @@ jwt = JWTManager(app)
 if __name__ == '__main__':
     app.run(debug=True, port=5555)
 
-@app.route('/api/reservations', methods=['POST'])
+@app.route('/reservations', methods=['POST'])
 @jwt_required()
 def create_reservation():
     current_user = get_jwt_identity()
@@ -210,6 +201,13 @@ def create_reservation():
     db.session.commit()
     
     return jsonify({'message': 'Reservation created successfully', 'id': new_reservation.id}), 201
+
+@app.route('/api/user_reservations', methods=['GET'])
+@jwt_required()
+def get_user_reservations():
+    current_user_id = get_jwt_identity()
+    user_reservations = Reservation.query.filter_by(user_id=current_user_id).all()
+    return jsonify([reservation.serialize() for reservation in user_reservations]), 200
 
 # Initialize JWT
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Change this to a secure key

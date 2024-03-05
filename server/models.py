@@ -39,19 +39,29 @@ class Users(db.Model):
 
     def set_password(self, password):
         self.passwordhash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
+        
+        
+        
     @validates('username', 'passwordhash', 'user_email')
     def validate_fields(self, key, value):
-        if key == 'username' and 0 < len(value) <= 25:
+         if key == 'username' and 0 < len(value) <= 25:
             return value
-        elif key == 'passwordhash' and 0 < len(value) <= 25:
+         elif key == 'passwordhash' and len(value) == 60:  # Adjusted validation for bcrypt hash
             return value
-        elif key == 'user_email' and re.match(r"[^@]+@[^@]+\.[^@]+", value):
+         elif key == 'user_email' and re.match(r"[^@]+@[^@]+\.[^@]+", value):
             return value
-        else:
-            raise ValueError(f"Invalid {key}")
+         else:
+             raise ValueError(f"Invalid {key}")
+
 
 class MenuItem(db.Model):
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'price': self.price
+        }
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=False)
@@ -83,6 +93,20 @@ class Menu(db.Model):
             raise ValueError(f"Invalid {key}")
 
 class Reservation(db.Model):
+    def serialize(self):
+        return {
+            'id': self.id,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'notes': self.notes,
+            'phone_number': self.phone_number,
+            'email': self.email,
+            'date': self.date,
+            'date_time': self.date_time,
+            'user_id': self.user_id,
+            'guest_id': self.guest_id,
+          'menu_id': self.menu_id
+        }
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
@@ -108,11 +132,8 @@ class Reservation(db.Model):
             return value
         else:
             raise ValueError(f"Invalid {key}")
-if __name__ == '__main__':
-    app.run(debug=True, port=5555)
-    # This block of code will be executed when you run the script directly
-    # You can add any code here that you want to execute when the script is run
 
-    # For example, you might want to create your database tables
-    # You can use the create_all() method to create all tables defined in your models
-    db.create_all()
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True, port=5555)
