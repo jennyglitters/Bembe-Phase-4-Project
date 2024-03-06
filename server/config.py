@@ -3,13 +3,10 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
-from sql import StringIO
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from flask_jwt_extended import JWTManager, create_access_token
-from config import db
 from flask_restful import Api
-from models import Users, MenuItem, Reservation, Menu, MenuItemForm
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
@@ -33,3 +30,4 @@ class Config:
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = 'your-secret-key'

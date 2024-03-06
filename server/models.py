@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -13,13 +13,21 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
-from config import db
+from config import Config
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
+app = Flask(__name__)
+def create_app(config_class=Config):
+    app.config.from_object(config_class) 
+    jwt = JWTManager(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})
+    db = SQLAlchemy()
+    db.init_app(app)
+    migrate = Migrate(app, db)
+    api = Api(app)
 
-
-class Users(db.Model, SerializerMixin):
+class Users(db.Model,):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -50,7 +58,7 @@ class Users(db.Model, SerializerMixin):
              return value
 
 
-class MenuItem(db.Model,SerializerMixin):
+class MenuItem(db.Model,):
     def serialize(self):
         return {
             'id': self.id,
@@ -132,8 +140,6 @@ class Reservation(db.Model, SerializerMixin):
             return value
         else:
             raise ValueError(f"Invalid {key}")
-        def __repr__(self):
-        return f'< {self.id}, {self.user_id}, {self._id}>'
 
 if __name__ == '__main__':
     with app.app_context():

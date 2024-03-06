@@ -7,7 +7,21 @@ from models import db, Users, Menu, Reservation, MenuItem, MenuItemForm
 CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins as needed
 app = create_app()
 from config import db
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class) 
+    jwt = JWTManager(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})
+    db = SQLAlchemy()
+    db.init_app(app)
+    migrate = Migrate(app, db)
+    api = Api(app)
+
+
+
 def seed_data():
+    app = create_app()
     with app.app_context():  # This will push an application context
         # Create some users
         user1 = Users(user_email='john@example.com', user_password='password123')
