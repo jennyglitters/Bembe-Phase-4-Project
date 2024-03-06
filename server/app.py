@@ -8,26 +8,26 @@ from flask_migrate import Migrate
 from flask_restful import Api
 from models import db, User, MenuItem, Reservation
 import os
-
+from config import Config
 def create_app():
     app = Flask(__name__)
     # Database configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yourdatabase.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yourdatabase.db'
+    #app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     # JWT and Secret Key configuration
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    
+    #app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
+    #app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
+    #app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+    app.config.from_object(Config)
     db.init_app(app)
     jwt = JWTManager(app)
     CORS(app, resources={r"/*": {"origins": "*"}})
     Migrate(app, db)
     api = Api(app)
 
-    @app.before_first_request
-    def create_tables():
-        db.create_all()
+    #@app.before_first_request
+    #def create_tables():
+       # db.create_all()
 
     # User registration
     @app.route('/users/register', methods=['POST'])
@@ -46,7 +46,7 @@ def create_app():
     # User login
     @app.route('/users/login', methods=['POST'])
     def login_user():
-        data = request.json
+        data = request.get_json()
         print("Login Attempt:", data)  # Debug print
         user = User.query.filter_by(email=data['email']).first()
         if user:
