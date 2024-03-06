@@ -18,10 +18,8 @@ def seed_data():
         for i, full_name in enumerate(names):
             first_name, last_name = full_name.split()
             email = f"{first_name.lower()}.{last_name.lower()}@example.com"
-            user = User(email=email, name=first_name, lastname=last_name, phonenumber=f"555-010{i:02d}")
-            # Placeholder for setting the user's password correctly
-            user.set_password(f"password{i:03d}")
-            users.append(user)
+            password = "default_password"  # Define a default password or generate one dynamically
+            user = User(email=email, name=first_name, lastname=last_name, phonenumber=f"555-010{i:02d}", password=password)
             db.session.add(user)
 
         # Menu Items from Menu.js

@@ -26,6 +26,12 @@ def init_app(app):
     db.init_app(app)
     migrate.init_app(app, db)
 
+reservation_menu_item = db.Table('reservation_menu_item',
+    db.Column('reservation_id', db.Integer, db.ForeignKey('reservations.id'), primary_key=True),
+    db.Column('menu_item_id', db.Integer, db.ForeignKey('menu_items.id'), primary_key=True)
+)
+   
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -51,17 +57,17 @@ class User(db.Model):
         """Check hashed password."""
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
-    @validates('email')
-    def validate_email(self, key, value):
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
-            raise ValueError("Invalid email address.")
-        return value
+    # @validates('email')
+    # def validate_user_email(self, key, value):  # Changed method name for clarity
+    #     if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+    #         raise ValueError("Invalid email address.")
+    #     return value
 
-    @validates('phonenumber')
-    def validate_phonenumber(self, key, value):
-        if not re.match(r"^\+?\d{10,15}$", value):
-            raise ValueError("Invalid phone number format.")
-        return value
+    # @validates('phonenumber')
+    # def validate_phonenumber(self, key, value):
+    #     if not re.match(r"^\+?\d{10,15}$", value):
+    #         raise ValueError("Invalid phone number format.")
+    #     return value
 
 class Reservation(db.Model, SerializerMixin):
     __tablename__ = 'reservations'
@@ -76,8 +82,8 @@ class Reservation(db.Model, SerializerMixin):
     special_notes = db.Column(db.String(500), nullable=True)
 
     # Many-to-many relationship is set up with MenuItem
-    menu_items = db.relationship('MenuItem', secondary='reservation_menu_item', back_populates='reservations')
-    order_items = db.relationship('OrderList', back_populates='reservations')
+    menu_items = db.relationship('MenuItem', secondary=reservation_menu_item, back_populates='reservations')
+    order_items = db.relationship('OrderList', back_populates='reservation')  # This matches the relationship name in OrderList
 
     def __init__(self, name, lastname, email, phonenumber, date, time, guest_count, special_notes=None):
         self.name = name
@@ -90,48 +96,47 @@ class Reservation(db.Model, SerializerMixin):
         self.special_notes = special_notes
 
     # Validation methods
-    @validates('name', 'lastname', 'email', 'phonenumber')
-    def validate_not_empty(self, key, value):
-        if not value:
-            raise ValueError(f"{key} cannot be empty.")
-        return value
+    # @validates('name', 'lastname', 'email', 'phonenumber')
+    # def validate_not_empty(self, key, value):
+    #     if not value:
+    #         raise ValueError(f"{key} cannot be empty.")
+    #     return value
 
-    @validates('email')
-    def validate_email(self, key, email):
-        # Simple email validation, consider using a library for robust validation
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            raise ValueError("Invalid email address.")
-        return email
+    # @validates('email')
+    # def validate_reservation_email(self, key, email):  # Changed method name for clarity
+    #     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+    #         raise ValueError("Invalid email address.")
+    #     return email
 
-    @validates('phonenumber')
-    def validate_phonenumber(self, key, value):
-        # Simple phone validation, consider using a library for robust validation
-        if not re.match(r"^\+?\d{10,15}$", value):
-            raise ValueError("Invalid phone number format.")
-        return value
+    # @validates('phonenumber')
+    # def validate_reservation_phonenumber(self, key, value):  # Changed method name for clarity
+    #     """Validate the phonenumber format."""
+    #     if not re.match(r"^\+?\d{10,15}$", value):
+    #         raise ValueError("Invalid phone number format.")
+    #     return value
 
-    @validates('guest_count')
-    def validate_guest_count(self, key, value):
-        if value <= 0:
-            raise ValueError("Guest count must be greater than zero.")
-        return value
+    # @validates('guest_count')
+    # def validate_guest_count(self, key, value):
+    #     if value <= 0:
+    #         raise ValueError("Guest count must be greater than zero.")
+    #     return value
 
-    # Serialization 
-    def serialize(self):
-        """Converts this into a dictionary."""
-        return {
-            'id': self.id,
-            'name': self.name,
-            'lastname': self.lastname,
-            'email': self.email,
-            'phonenumber': self.phonenumber,
-            'date': self.date.isoformat(),
-            'time': self.time.isoformat(),
-            'guest_count': self.guest_count,
-            'special_notes': self.special_notes,
-            # Menu_items serialization defined in MenuItem
-            'menu_items': [item.serialize() for item in self.menu_items]
-        }
+    # # Serialization 
+    # def serialize(self):
+    #     """Converts this into a dictionary."""
+    #     return {
+    #         'id': self.id,
+    #         'name': self.name,
+    #         'lastname': self.lastname,
+    #         'email': self.email,
+    #         'phonenumber': self.phonenumber,
+    #         'date': self.date.isoformat(),
+    #         'time': self.time.isoformat(),
+    #         'guest_count': self.guest_count,
+    #         'special_notes': self.special_notes,
+    #         # Menu_items serialization defined in MenuItem
+    #         'menu_items': [item.serialize() for item in self.menu_items]
+    #     }
 
 class MenuItem(db.Model, SerializerMixin):
     __tablename__ = 'menu_items'
@@ -141,38 +146,40 @@ class MenuItem(db.Model, SerializerMixin):
     price = db.Column(db.Float)  # Allowing price to be nullable
 
     order_items = db.relationship('OrderList', back_populates='menu_item')
+    reservations = db.relationship('Reservation', secondary=reservation_menu_item, back_populates='menu_items')
+
 
     def __init__(self, name, description, price=None):
         self.name = name
         self.description = description
         self.price = price
 
-    @validates('name')
-    def validate_name(self, key, value):
-        if not value:
-            raise AssertionError('The name cannot be empty.')
-        return value
+    # @validates('name')
+    # def validate_name(self, key, value):
+    #     if not value:
+    #         raise AssertionError('The name cannot be empty.')
+    #     return value
 
-    @validates('description')
-    def validate_description(self, key, value):
-        if not value:
-            raise AssertionError('The description cannot be empty.')
-        return value
+    # @validates('description')
+    # def validate_description(self, key, value):
+    #     if not value:
+    #         raise AssertionError('The description cannot be empty.')
+    #     return value
 
-    @validates('price')
-    def validate_price(self, key, value):
-        if value is not None and value < 0:
-            raise AssertionError('The price cannot be negative.')
-        return value
+    # @validates('price')
+    # def validate_price(self, key, value):
+    #     if value is not None and value < 0:
+    #         raise AssertionError('The price cannot be negative.')
+    #     return value
 
-    def serialize(self):
-        """Serializing menu item data for API responses."""
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'price': '{:.2f}'.format(self.price) if self.price is not None else None
-        }
+    # def serialize(self):
+    #     """Serializing menu item data for API responses."""
+    #     return {
+    #         'id': self.id,
+    #         'name': self.name,
+    #         'description': self.description,
+    #         'price': '{:.2f}'.format(self.price) if self.price is not None else None
+    #     }
 
 class OrderList(db.Model, SerializerMixin):
     __tablename__ = 'order_list'
@@ -182,7 +189,7 @@ class OrderList(db.Model, SerializerMixin):
     special_requests = db.Column(db.String(500))
 
     # Relationships
-    reservation = db.relationship('Reservation', back_populates='order_items')
+    reservation = db.relationship('Reservation', back_populates='order_items')  # Singular, indicating one-to-many from Reservation to OrderList
     menu_item = db.relationship('MenuItem', back_populates='order_items')
 
     def __init__(self, reservation_id, menu_item_id, quantity=1, special_requests=None):
@@ -191,11 +198,17 @@ class OrderList(db.Model, SerializerMixin):
         self.quantity = quantity
         self.special_requests = special_requests
 
-    def serialize(self):
-        """Converts this into a dictionary for API responses."""
-        return {
-            'reservation_id': self.reservation_id,
-            'menu_item_id': self.menu_item_id,
-            'quantity': self.quantity,
-            'special_requests': self.special_requests
-        }
+    # def serialize(self):
+    #     """Converts this into a dictionary for API responses."""
+    #     return {
+    #         'reservation_id': self.reservation_id,
+    #         'menu_item_id': self.menu_item_id,
+    #         'quantity': self.quantity,
+    #         'special_requests': self.special_requests
+    #     }
+
+def init_app(app):
+    db.init_app(app)
+    migrate.init_app(app, db)
+    with app.app_context():
+        pass
