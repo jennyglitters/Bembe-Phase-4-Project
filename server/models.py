@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+#models.py
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -15,26 +16,25 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
 from config import Config
 
-metadata = MetaData()
+metadata = MetaData(naming_convention={
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+})
 db = SQLAlchemy(metadata=metadata)
-app = Flask(__name__)
-def create_app(config_class=Config):
-    app.config.from_object(config_class) 
-    jwt = JWTManager(app)
-    CORS(app, resources={r"/*": {"origins": "*"}})
-    db = SQLAlchemy()
-    db.init_app(app)
-    migrate = Migrate(app, db)
-    api = Api(app)
+migrate = Migrate()
 
-class Users(db.Model,):
+def init_app(app):
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+class Users(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String, unique=True, nullable=False)
     passwordhash = db.Column(db.String, nullable=False)
 
-    reservations = db.relationship("Reservation", back_populates="user", foreign_keys="Reservation.user_id")
+    # Relationship with Reservation
+    reservations = db.relationship("Reservation", back_populates="user")
 
     def __init__(self, user_email, user_password):
         self.user_email = user_email
@@ -45,103 +45,85 @@ class Users(db.Model,):
 
     def set_password(self, password):
         self.passwordhash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        
-        
-        
+
     @validates('passwordhash', 'user_email')
     def validate_fields(self, key, value):
-         if key == 'passwordhash' and len(value) != 60:  # Adjusted validation for bcrypt hash
-             raise ValueError(f"Invalid password hash")
-         elif key == 'user_email' and not re.match(r"[^@]+@[^@]+\.[^@]+", value):
-             raise ValueError(f"Invalid {key}")
-         else:
-             return value
+        if key == 'passwordhash' and len(value) != 60:
+            raise ValueError("Invalid password hash")
+        elif key == 'user_email' and not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+            raise ValueError("Invalid user_email")
+        return value
 
+class MenuItem(db.Model):
+    __tablename__ = "menu_items"
 
-class MenuItem(db.Model,):
-    def serialize(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'price': self.price
-        }
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Float, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     menu_id = db.Column(db.Integer, db.ForeignKey("menus.id"))
+
+    # Relationship with Reservation through association table
     reservations = db.relationship('Reservation', secondary='reservation_menu_item', back_populates='menu_items')
 
+    @validates('name', 'description', 'price')
+    def validate_fields(self, key, value):
+        if key == 'name' and not (0 < len(value) <= 100):
+            raise ValueError("Invalid name")
+        elif key == 'description' and not (0 < len(value) <= 100):
+            raise ValueError("Invalid description")
+        elif key == 'price' and not (0 < value):
+            raise ValueError("Invalid price")
+        return value
 class MenuItemForm(FlaskForm):
-    name = StringField('Name', validators=[InputRequired(), Length(min=1, max=25)])
-    description = StringField('Description', validators=[InputRequired(), Length(min=1, max=25)])
-    price = FloatField('Price', validators=[InputRequired(), NumberRange(min=0.01)])
-class Menu(db.Model, SerializerMixin):
+    name = StringField('Name', validators=[InputRequired(), Length(max=100)])  # Max length aligned with the model
+    description = StringField('Description', validators=[InputRequired(), Length(max=100)])  # Max length aligned with the model
+    price = FloatField('Price', validators=[InputRequired(), NumberRange(min=0)])  # Ensure price is non-negative
+
+class Menu(db.Model):
     __tablename__ = "menus"
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Float, nullable=False)
+
+    # Relationship with MenuItem
+    items = db.relationship('MenuItem', backref='menu', lazy=True)
+
+    # Relationship with Reservation
     reservations = db.relationship("Reservation", back_populates="menu")
 
     @validates('name', 'description', 'price')
     def validate_fields(self, key, value):
-        if key == 'name' and 0 < len(value) <= 25:
-            return value
-        elif key == 'description' and 0 < len(value) <= 25:
-            return value
-        elif key == 'price' and 0 < value <= 25:
-            return value
-        else:
-            raise ValueError(f"Invalid {key}")
+        if key == 'name' and not (0 < len(value) <= 100):
+            raise ValueError("Invalid name")
+        elif key == 'description' and not (0 < len(value) <= 100):
+            raise ValueError("Invalid description")
+        elif key == 'price' and not (0 <= value):
+            raise ValueError("Invalid price")
+        return value
 
-class Reservation(db.Model, SerializerMixin):
-    def serialize(self):
-        return {
-            'id': self.id,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'notes': self.notes,
-            'phone_number': self.phone_number,
-            'email': self.email,
-            'date': self.date,
-            'date_time': self.date_time,
-            'user_id': self.user_id,
-            'guest_id': self.guest_id,
-          'menu_id': self.menu_id
-        }
+class Reservation(db.Model):
+    __tablename__ = "reservations"
+
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(100), nullable=False)
-    last_name = db.Column(db.String(100), nullable=False)
-    notes = db.Column(db.String(1000), nullable=False)
-    phone_number = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), nullable=False)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
-    date_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    guest_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
-    menu = db.relationship("Menu", back_populates="reservations", foreign_keys=[menu_id])
-    user = db.relationship("Users", back_populates="reservations", foreign_keys=[user_id])
-    menu_items = db.relationship("MenuItem", secondary='reservation_menu_item', back_populates="reservations")
-    reservation_menu_item = db.Table('reservation_menu_item',
-                                     db.Column('reservation_id', db.Integer, db.ForeignKey('reservation.id'), primary_key=True),
-                                     db.Column('menu_item_id', db.Integer, db.ForeignKey('menu_item.id'), primary_key=True)
-)
-    @validates('first_name', 'last_name', 'notes', 'phone_number', 'email', 'date', 'date_time', 'user_id', 'menu_id')
-    def validate_fields(self, key, value):
-        if isinstance(value, str) and 0 < len(value) <= 1000:
-            return value
-        elif isinstance(value, datetime):
-            return value
-        elif isinstance(value, int):
-            return value
-        else:
-            raise ValueError(f"Invalid {key}")
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'))
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True, port=5555)
+    # Relationships
+    user = db.relationship("Users", back_populates="reservations")
+    menu = db.relationship("Menu", back_populates="reservations")
+    menu_items = db.relationship("MenuItem", secondary='reservation_menu_item', back_populates="reservations")
+
+    @validates('user_id', 'menu_id')
+    def validate_fields(self, key, value):
+        if key in ['user_id', 'menu_id'] and not isinstance(value, int):
+            raise ValueError(f"Invalid {key}")
+        return value
+
+# Association Table for MenuItem and Reservation
+reservation_menu_item = db.Table('reservation_menu_item',
+    db.Column('reservation_id', db.Integer, db.ForeignKey('reservations.id'), primary_key=True),
+    db.Column('menu_item_id', db.Integer, db.ForeignKey('menu_items.id'), primary_key=True)
+)

@@ -1,17 +1,16 @@
-from random import randint, choice as rc
-from faker import Faker
-from flask_cors import CORS
-from app import create_app, db
-from models import Users, Menu, Reservation, MenuItem, MenuItemForm
+#seed.py
+from app import create_app
+from models import db, Users, Menu, Reservation
 from datetime import datetime
+from flask_cors import CORS
 
-CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins as needed
+app = create_app()
 
 def seed_data():
     with app.app_context():  # This will push an application context
         # Create some users
         user1 = Users(user_email='john@example.com', user_password='password123')
-        user2 = Users(username='Jane', user_email='jane@example.com', user_password='password456')
+        user2 = Users(user_email='jane@example.com', user_password='password456')
         db.session.add(user1)
         db.session.add(user2)
         db.session.commit()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#debug.py
 
 from app import app
 from models import db, Users, MenuItem, Menu, Reservation, MenuItemForm
