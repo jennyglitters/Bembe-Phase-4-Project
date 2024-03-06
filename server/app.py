@@ -7,9 +7,10 @@ from flask_migrate import Migrate
 from flask_restful import Api
 from models import Users, MenuItem, Reservation, Menu, MenuItemForm
 from datetime import datetime
+from flask_sqlalchemy import db
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    flask_app = Flask(__name__)
     app.config.from_object(config_class)
 
     jwt = JWTManager(app)
