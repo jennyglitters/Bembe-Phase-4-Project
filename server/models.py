@@ -26,136 +26,176 @@ def init_app(app):
     db.init_app(app)
     migrate.init_app(app, db)
 
-class Users(db.Model):
-    __tablename__ = "users"
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.String(128), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    # Relationship with Reservation
-    reservations = db.relationship('Reservation', back_populates='user', lazy='dynamic')
-
-    def __init__(self, user_email, user_password):
-        self.user_email = user_email
-        self.set_password(user_password)
-
-    def check_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
-
-    def set_password(self, password):
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    @validates('password_hash', 'user_email')
-    def validate_fields(self, key, value):
-        if key == 'password_hash' and len(value) != 60:
-            raise ValueError("Invalid password hash")
-        elif key == 'user_email' and not re.match(r"[^@]+@[^@]+\.[^@]+", value):
-            raise ValueError("Invalid user_email")
-        return value
-
-class MenuItem(db.Model):
-    __tablename__ = "menu_items"
-
+class User(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    menu_id = db.Column(db.Integer, db.ForeignKey("menus.id"))
+    lastname = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    phonenumber = db.Column(db.String(20), nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
 
-    # Relationship with Reservation through association table
-    reservations = db.relationship('Reservation', secondary='reservation_menu_item', back_populates='menu_items')
-    menu_items = db.relationship('ReservationMenuItem', back_populates='menu_item')
+    # Constructor
+    def __init__(self, name, lastname, email, phonenumber, password):
+        self.name = name
+        self.lastname = lastname
+        self.email = email
+        self.phonenumber = phonenumber
+        self.set_password(password)
 
-    @validates('name', 'description', 'price')
-    def validate_fields(self, key, value):
-        if key == 'name' and not (0 < len(value) <= 100):
-            raise ValueError("Invalid name")
-        elif key == 'description' and not (0 < len(value) <= 255):
-            raise ValueError("Invalid description")
-        elif key == 'price' and not (0 < value):
-            raise ValueError("Invalid price")
+    def set_password(self, password):
+        """Create hashed password."""
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_password(self, password):
+        """Check hashed password."""
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
+    @validates('email')
+    def validate_email(self, key, value):
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+            raise ValueError("Invalid email address.")
+        return value
+
+    @validates('phonenumber')
+    def validate_phonenumber(self, key, value):
+        if not re.match(r"^\+?\d{10,15}$", value):
+            raise ValueError("Invalid phone number format.")
+        return value
+
+class Reservation(db.Model, SerializerMixin):
+    __tablename__ = 'reservations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    lastname = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(128), nullable=False)
+    phonenumber = db.Column(db.String(20), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    time = db.Column(db.Time, nullable=False)
+    guest_count = db.Column(db.Integer, nullable=False)
+    special_notes = db.Column(db.String(500), nullable=True)
+
+    # Many-to-many relationship is set up with MenuItem
+    menu_items = db.relationship('MenuItem', secondary='reservation_menu_item', back_populates='reservations')
+    order_items = db.relationship('OrderList', back_populates='reservations')
+
+    def __init__(self, name, lastname, email, phonenumber, date, time, guest_count, special_notes=None):
+        self.name = name
+        self.lastname = lastname
+        self.email = email
+        self.phonenumber = phonenumber
+        self.date = date
+        self.time = time
+        self.guest_count = guest_count
+        self.special_notes = special_notes
+
+    # Validation methods
+    @validates('name', 'lastname', 'email', 'phonenumber')
+    def validate_not_empty(self, key, value):
+        if not value:
+            raise ValueError(f"{key} cannot be empty.")
+        return value
+
+    @validates('email')
+    def validate_email(self, key, email):
+        # Simple email validation, consider using a library for robust validation
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            raise ValueError("Invalid email address.")
+        return email
+
+    @validates('phonenumber')
+    def validate_phonenumber(self, key, value):
+        # Simple phone validation, consider using a library for robust validation
+        if not re.match(r"^\+?\d{10,15}$", value):
+            raise ValueError("Invalid phone number format.")
+        return value
+
+    @validates('guest_count')
+    def validate_guest_count(self, key, value):
+        if value <= 0:
+            raise ValueError("Guest count must be greater than zero.")
+        return value
+
+    # Serialization 
+    def serialize(self):
+        """Converts this into a dictionary."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'lastname': self.lastname,
+            'email': self.email,
+            'phonenumber': self.phonenumber,
+            'date': self.date.isoformat(),
+            'time': self.time.isoformat(),
+            'guest_count': self.guest_count,
+            'special_notes': self.special_notes,
+            # Menu_items serialization defined in MenuItem
+            'menu_items': [item.serialize() for item in self.menu_items]
+        }
+
+class MenuItem(db.Model, SerializerMixin):
+    __tablename__ = 'menu_items'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    price = db.Column(db.Float)  # Allowing price to be nullable
+
+    order_items = db.relationship('OrderList', back_populates='menu_item')
+
+    def __init__(self, name, description, price=None):
+        self.name = name
+        self.description = description
+        self.price = price
+
+    @validates('name')
+    def validate_name(self, key, value):
+        if not value:
+            raise AssertionError('The name cannot be empty.')
+        return value
+
+    @validates('description')
+    def validate_description(self, key, value):
+        if not value:
+            raise AssertionError('The description cannot be empty.')
+        return value
+
+    @validates('price')
+    def validate_price(self, key, value):
+        if value is not None and value < 0:
+            raise AssertionError('The price cannot be negative.')
         return value
 
     def serialize(self):
+        """Serializing menu item data for API responses."""
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'price': self.price
+            'price': '{:.2f}'.format(self.price) if self.price is not None else None
         }
 
-class MenuItemForm(FlaskForm):
-    name = StringField('Name', validators=[InputRequired(), Length(max=100)])  # Max length aligned with the model
-    description = StringField('Description', validators=[InputRequired(), Length(max=255)])  # Max length aligned with the model
-    price = FloatField('Price', validators=[InputRequired(), NumberRange(min=0)])  # Ensure price is non-negative
-
-class Menu(db.Model):
-    __tablename__ = "menus"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-
-    # Relationship with MenuItem
-    items = db.relationship('MenuItem', backref='menu', lazy=True)
-
-    # Relationship with Reservation
-    reservations = db.relationship("Reservation", back_populates="menu")
-
-    @validates('name', 'description', 'price')
-    def validate_fields(self, key, value):
-        if key == 'name' and not (0 < len(value) <= 100):
-            raise ValueError("Invalid name")
-        elif key == 'description' and not (0 < len(value) <= 100):
-            raise ValueError("Invalid description")
-        elif key == 'price' and not (0 <= value):
-            raise ValueError("Invalid price")
-        return value
-
-class Reservation(db.Model):
-    __tablename__ = "reservations"
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'))
-    date_time = db.Column(db.DateTime, nullable=False)
-    guest_size = db.Column(db.Integer, nullable=False)
-    special_notes = db.Column(db.String(255), nullable=True)  # Added field
-    name = db.Column(db.String(100), nullable=False)  # Added field
-    lastname = db.Column(db.String(100), nullable=False)  # Added field
-    phonenumber = db.Column(db.String(15), nullable=False)  # Added field
-
-    user = db.relationship("Users", back_populates="reservations")
-    menu = db.relationship("Menu", back_populates="reservations")
-    menu_items = db.relationship("MenuItem", secondary='reservation_menu_item', back_populates="reservations")
-
-    @validates('user_id', 'menu_id')
-    def validate_fields(self, key, value):
-        if key in ['user_id', 'menu_id'] and not isinstance(value, int):
-            raise ValueError(f"Invalid {key}")
-        return value
-
-    def serialize(self):
-        return {
-            'id': self.id,
-            'user_id': self.user.id,
-            'date_time': self.date_time.isoformat(),
-            'guest_size': self.guest_size,
-            'menu_items': [item.serialize() for item in self.menu_items]
-        }    
-
-# Association Table for MenuItem and Reservation
-reservation_menu_item = db.Table('reservation_menu_item',
-    db.Column('reservation_id', db.Integer, db.ForeignKey('reservations.id'), primary_key=True),
-    db.Column('menu_item_id', db.Integer, db.ForeignKey('menu_items.id'), primary_key=True)
-)
-
-class ReservationMenuItem(db.Model):
-    __tablename__ = 'reservation_menu_item'
+class OrderList(db.Model, SerializerMixin):
+    __tablename__ = 'order_list'
     reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.id'), primary_key=True)
     menu_item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id'), primary_key=True)
-    reservation = db.relationship('Reservation', backref=db.backref("reservation_menu_item_assoc"))
-    menu_item = db.relationship('MenuItem', backref=db.backref("reservation_menu_item_assoc"))
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    special_requests = db.Column(db.String(500))
 
-MenuItem.reservations = db.relationship('Reservation', secondary='reservation_menu_item', back_populates='menu_items')
+    # Relationships
+    reservation = db.relationship('Reservation', back_populates='order_items')
+    menu_item = db.relationship('MenuItem', back_populates='order_items')
+
+    def __init__(self, reservation_id, menu_item_id, quantity=1, special_requests=None):
+        self.reservation_id = reservation_id
+        self.menu_item_id = menu_item_id
+        self.quantity = quantity
+        self.special_requests = special_requests
+
+    def serialize(self):
+        """Converts this into a dictionary for API responses."""
+        return {
+            'reservation_id': self.reservation_id,
+            'menu_item_id': self.menu_item_id,
+            'quantity': self.quantity,
+            'special_requests': self.special_requests
+        }

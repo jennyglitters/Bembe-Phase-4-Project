@@ -64,36 +64,36 @@ const handleLogin = async (email) => {
   };
 
   return (
-    <div>
-      <h1>Manage Your Reservation</h1>
-      {!isAuthenticated ? (
-        <div>
-          <h2>Sign In:</h2>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button onClick={() => handleLogin(email)}>Login</button>
-        </div>
-      ) : null}
-      {!reservation ? (
-        <div>
-          <p>No reservation made yet.</p>
-          <button onClick={handleMakeReservationClick}>Make A Reservation</button>
-        </div>
-      ) : (
-        <div>
-          <h2>Your Reservation</h2>
-          <p>Reservation details...</p>
-          <button onClick={handleUpdateReservationClick}>Update Reservation</button>
-          <button onClick={handleDeleteReservation}>Cancel Reservation</button>
-        </div>
-      )}
-    </div>
-  );
-}
+      <div className="center-content">
+    <h1>Manage Your Reservation</h1>
+    {!isAuthenticated ? (
+      <div>
+        <h2>Sign In:</h2>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button onClick={() => handleLogin(email)}>Login</button>
+      </div>
+    ) : null}
+    {!reservation ? (
+      <div>
+        <p>No reservation made yet.</p>
+        <button onClick={handleMakeReservationClick}>Make A Reservation</button>
+      </div>
+    ) : (
+      <div>
+        <h2>Your Reservation</h2>
+        <p>Reservation details...</p>
+        <button onClick={handleUpdateReservationClick}>Update Reservation</button>
+        <button onClick={handleDeleteReservation}>Cancel Reservation</button>
+      </div>
+    )}
+  </div>
+);
+    }; 
 
 export default ReservationManagement;
 

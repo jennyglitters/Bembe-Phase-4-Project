@@ -56,15 +56,15 @@ const Menu = () => {
       {/* Starters & Macs Section */}
       <div className="menu-section">
         <h2>Starters & Macs</h2>
-        {renderMenuItem(6, "Guacamole", "$7.15", "Traditional guacamole served with fresh tortilla chips.")}
-        {renderMenuItem(7, "Bembe Macs", null, "Shell pasta, our signature 3 cheese blend and panko breadcrumbs.")}
-        {renderMenuItem(8, "Three Cheese", "$15.45", "Shell pasta, our signature 3 cheese blend and panko breadcrumbs.")}
-        {renderMenuItem(9, "Lobster", "$18.54", "Shell pasta with our signature 3 cheese blend, panko breadcrumbs, and fresh lobster.")}
-        {renderMenuItem(10, "Spinach & Truffle", "$17.51", "Creamy truffle mac with sautéed spinach mixed into our three cheese blend and shell pasta.")}
-        {renderMenuItem(11, "BBQ Chicken", "$17.51", "Grilled chicken breast, our signature 3 cheese blend, panko breadcrumbs, and a drizzle of BBQ sauce.")}
-        {renderMenuItem(12, "Vegan Mac", "$16.50", "A dairy-free alternative with a rich, creamy vegan cheese sauce and shell pasta.")}
-        {renderMenuItem(13, "Burrata", "$21.63", "Fresh burrata on Amy’s sourdough with pesto and heirloom tomatoes drizzled with balsamic glaze.")}
-        {renderMenuItem(14, "Mushroom Croquette", "$13.39", "Mushroom risotto with truffle oil in 3 croquettes topped with truffle aioli.")}
+        {renderMenuItem(6, "Plantain & Pork Guacamole", "$7.15", "Our twist on guacamole, served on a bed of mashed plantains and topped with crispy pork bits for a Caribbean flair.")}
+        {renderMenuItem(7, "Dominican Fried Cheese Mac", null, "A creamy mac and cheese with a Dominican twist, featuring fried cheese, traditional white cheese, and a breadcrumb topping.")}
+        {renderMenuItem(8, "Three-Cheese Caribbean Mac", "$15.45", "Our classic mac and cheese enriched with a trio of Caribbean cheeses, giving it a unique, tropical taste.")}
+        {renderMenuItem(9, "Boriqua Lobster Mac", "$18.54", "Lobster mac and cheese inspired by Puerto Rican flavors, with a creamy Creole sauce and a crispy breadcrumb topping.")}
+        {renderMenuItem(10, "Truffle & Spinach Caribbean Mac", "$17.51", "Elevate your mac and cheese experience with our truffle and spinach blend, featuring Caribbean cheeses for a tropical touch.")}
+        {renderMenuItem(11, "Island BBQ Chicken Mac", "$17.51", "Tender grilled chicken in a sweet and tangy island BBQ sauce, mixed with our signature mac and cheese.")}
+        {renderMenuItem(12, "Tropical Vegan Mac", "$16.50", "A dairy-free delight, our vegan mac features a coconut-based cheese sauce, bringing the tropics to your table.")}
+        {renderMenuItem(13, "Burrata & Plantain Bites", "$21.63", "Creamy burrata served on crispy plantain bites, complemented by avocado-lime pesto and fresh tomatoes, with a mango balsamic drizzle.")}
+        {renderMenuItem(14, "Mushroom & Cassava Croquettes", "$13.39", "A fusion of flavors in every bite, these croquettes combine mushrooms and cassava for a Caribbean twist, served with cilantro and garlic aioli.")}
       </div>
 
       {/* Carne Section */}
@@ -80,19 +80,19 @@ const Menu = () => {
         {renderMenuItem(17, "Jalapeno Margarita", "$13.39", "Jalapeno-infused tequila, Lime, Orange. +1 to \"Make it 'Skinny'\" with honey")}
         {renderMenuItem(18, "Blood Orange Mango Mojito", "$13.39", "Mango Rum, Mint, Blood Orange, Lime")}
         {renderMenuItem(19, "Bembe Hybrid", "$11.33", "Red and White Sangria, St.Germaine, Blood Orange, Champagne Float")}
-        {renderMenuItem(20, "Espresso Martini", "$12.36", "Vodka with a nice day cold brew x poco special recipe")}
+        {renderMenuItem(20, "Espresso Martini", "$12.36", "Vodka with a nice day cold brew x Bembe special recipe")}
         {renderMenuItem(21, "Bubbly Mule", "$13.39", "Gin, Ginger, Lemon, Lychee, Champagne")}
       </div>
       
       {/* Beer Section */}
       <div className="menu-section">
-        <h2>BEER</h2>
-        {renderMenuItem(22, "Yuengling Lager", "$8.24", "Rich amber color and medium-bodied flavor - 4.5% ABV")}
-        {renderMenuItem(23, "Blue Moon", "$7.20", "Belgian-style wheat ale, Valencia orange peel for a subtle sweetness - 5.4% ABV")}
+        <h2>CERVEZAS</h2>
+        {renderMenuItem(22, "Presidente", "$8.24", "Dominican pilsner, crisp and refreshing with a light golden color - 5.0% ABV")}
+        {renderMenuItem(23, "Medalla Light", "$7.20", "Puerto Rican light lager, smooth and light with a hint of malt - 4.2% ABV")}
         {renderMenuItem(24, "Guinness Draught", "$9.30", "Irish dry stout, distinctive black color and creamy head - 4.2% ABV")}
-        {renderMenuItem(25, "IPA of the Moment", "$10.00", "Ask your server about our current selection of IPA")}
-        {renderMenuItem(26, "Brooklyn Lager", "$8.00", "American Amber Lager, firm malt center supported by a refreshing bitterness and floral hop aroma - 5.2% ABV")}
-        {renderMenuItem(27, "Stella Artois", "$8.50", "Belgian pilsner, well-balanced flavors with a hint of bitterness - 5.0% ABV")}
+        {renderMenuItem(25, "IPA of the Moment", "$10.00", "Ask your server about our current selection of IPA, featuring unique and seasonal options from around the world")}
+        {renderMenuItem(26, "Blue Moon", "$7.20", "Belgian-style wheat ale, Valencia orange peel for a subtle sweetness - 5.4% ABV")}
+        {renderMenuItem(27, "Brooklyn Lager", "$8.00", "American Amber Lager, firm malt center supported by a refreshing bitterness and floral hop aroma - 5.2% ABV")}
       </div>
 
       {/* Vino Section */}
@@ -111,4 +111,4 @@ const Menu = () => {
   );
 };
 
-export default Menu; 
+export default Menu;

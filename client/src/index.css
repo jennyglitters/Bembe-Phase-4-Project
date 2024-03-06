@@ -9,6 +9,21 @@
 .logo {
   font-size: 2.5rem; /* Large font size for the logo */
   margin-right: auto; /* Ensures it stays on the left */
+  text-decoration: none; /* Removes underline */
+  color: inherit; /* Inherits color from parent, or set your desired color */
+}
+
+/* Remove the underline effect on hover for the logo */
+.logo:hover::after {
+  content: none;
+}
+
+.navbar .nav-links .logo {
+  text-decoration: none;
+}
+
+.logo.active::after {
+  content: none;
 }
 
 body {
@@ -225,7 +240,7 @@ button.clear-form-button {
   cursor: pointer;
   outline: none;
   box-shadow: none;
-  margin-left:170px;
+  margin-left:165px;
 }
 
 button.submit-button {
@@ -237,7 +252,7 @@ button.submit-button {
   cursor: pointer;
   outline: none;
   box-shadow: none;
-  margin-left:150px;
+  margin-left:140px;
 }
 
 /* Add styles for hover effects */
@@ -353,30 +368,55 @@ button.clear-form-button:hover {
 }
 
 /* Reservation Management */
-.reservation-container input[type="email"] {
-  width: 50%; /* Reduced width */
-  padding: 0.5em;
-  margin: 1em 0;
+button:hover {
+  background-color: #b3b3b3; /* Darker gray */
+  color: white;
+}
+
+input[type="email"] {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 50%;
+  box-sizing: border-box;
+}
+
+.center-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input[type="email"] {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  color: #333; /* Text color for the clear button */
   border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.reservation-container button {
-  padding: 0.5em 1em;
-  color: #fff;
-  background-color: #333;
-  border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Added shadow */
+  outline: none;
+  box-shadow: none;
 }
 
-.reservation-container button:hover {
-  background-color: #666;
-  transform: scale(1.05); /* Added scale effect */
+button:hover {
+  background-color: #b3b3b3; /* Darker gray */
+  color: white;
 }
 
-.reservation-container button:active {
-  transform: scale(1); /* Reset scale when button is clicked */
+.center-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vh; 
+  width: 100%; 
+  text-align: center; 
 }

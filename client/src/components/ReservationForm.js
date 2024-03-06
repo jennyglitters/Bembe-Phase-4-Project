@@ -174,26 +174,23 @@ const ReservationForm = () => {
               <p className="capacity-message">Max Capacity is {maxGuests} currently, please select again</p>
             )}
 
-            {/* Field to select menu items */}
-            <div role="group" aria-labelledby="checkbox-group" className="form-field">
-              <h3>Menu Items</h3>
-              {menuItems.map((item) => (
-                <label key={item.id}>
-                  <Field
-                    type="checkbox"
-                    name="menuItems"
-                    value={item.name}
-                    checked={values.menuItems.includes(item.name)}
-                    onChange={() => {
-                      const nextValue = values.menuItems.includes(item.name)
-                        ? values.menuItems.filter((i) => i !== item.name)
-                        : [...values.menuItems, item.name];
-                      setFieldValue('menuItems', nextValue);
-                    }}
-                  />
-                  {item.name}
-                </label>
-              ))}
+            <div className="form-field">
+              <label htmlFor="menuItems">Select Menu Items</label>
+              <Field as="select" id="menuItems" name="menuItems" multiple={true} value={values.menuItems} onChange={event => {
+                const options = event.target.options;
+                const value = [];
+                for (let i = 0, l = options.length; i < l; i++) {
+                  if (options[i].selected) {
+                    value.push(options[i].value);
+                  }
+                }
+                setFieldValue('menuItems', value);
+              }} style={{ height: "200px" }}>
+                {menuItems.map((item) => (
+                  <option key={item.id} value={item.name}>{item.name}</option>
+                ))}
+              </Field>
+              <ErrorMessage name="menuItems" component="div" className="field-error" />
             </div>
 
             {/* Display selected menu items */}
