@@ -47,7 +47,10 @@ def create_app():
     @app.route('/users/login', methods=['POST'])
     def login_user():
         data = request.json
+        print("Login Attempt:", data)  # Debug print
         user = User.query.filter_by(email=data['email']).first()
+        if user:
+            print("User found:", user.email)  # More debug print
         if user and check_password_hash(user.password_hash, data['password']):
             access_token = create_access_token(identity=data['email'])
             return jsonify(access_token=access_token), 200

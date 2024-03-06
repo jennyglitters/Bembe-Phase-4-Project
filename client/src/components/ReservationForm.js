@@ -50,9 +50,13 @@ const ReservationForm = () => {
   };
 
   const handleSubmit = (values, actions) => {
+    const token = localStorage.getItem('accessToken'); // Assume the token is stored in localStorage
     fetch('/reservations', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`  // Include the token in the request
+      },
       body: JSON.stringify(values),
     })
     .then(response => {
@@ -90,28 +94,24 @@ const ReservationForm = () => {
   };
   
   return (
-    <div>
-      <h2>Make a Reservation</h2>
-      {submissionMessage && (
-        <div className="submission-message">
-          {submissionMessage}
-        </div>
-      )}
-      <Formik
-        initialValues={{
-          name: '',
-          lastname: '',
-          email: '',
-          phonenumber: '',
-          time: '',
-          guests: '',
-          menuItems: [], // Holds selected menu items
-          date: ''
-        }}
-        // Validation logic 
-        validate={validate}
-        onSubmit={handleSubmit}
-      >
+      <div>
+          <h2>Make a Reservation</h2>
+          {submissionMessage && <div className="submission-message">{submissionMessage}</div>}
+          <Formik
+              initialValues={{
+                  name: '',
+                  lastname: '',
+                  email: '',
+                  password: '', // Including password 
+                  phonenumber: '',
+                  date: '',
+                  time: '',
+                  guests: '',
+                  menuItems: [],
+                  specialNotes: '', 
+              }}
+              onSubmit={handleSubmit}
+          >
         {({ values, setFieldValue, isSubmitting, resetForm }) => (
           <Form>
             <div className="form-field">
@@ -130,6 +130,12 @@ const ReservationForm = () => {
               <label htmlFor="email">Email</label>
               <Field id="email" name="email" type="email" placeholder="Your Email Address" />
               <ErrorMessage name="email" component="div" className="field-error" />
+            </div>
+            
+            <div className="form-field">
+                <label htmlFor="password">Password</label>
+                <Field id="password" name="password" type="password" />
+                <ErrorMessage name="password" component="div" className="field-error" />
             </div>
 
             <div className="form-field">
