@@ -177,18 +177,11 @@ def handle_reservation(reservation_id):
 def create_reservation():
     current_user = get_jwt_identity()
     data = request.json
-<<<<<<< HEAD
-    
-    # Convert the date and time strings to a datetime object
-    reservation_datetime_str = f"{data['date']} {data['time']}"
-    reservation_datetime = datetime.strptime(reservation_datetime_str, '%Y-%m-%d %I:%M %p')
-=======
 
     # Parse date and time from the frontend format
     reservation_datetime = datetime.strptime(f"{data['date']} {data['time']}", '%Y-%m-%d %I:%M %p')
 
     # Adjusting to use 'specialNotes' as received from the frontend
->>>>>>> 82344ca2c6496bb639f513b0ecf3263e5c2add85
     new_reservation = Reservation(
         user_id=current_user,
         email=data['email'],
