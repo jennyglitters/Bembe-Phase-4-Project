@@ -1,52 +1,54 @@
+//ReservationManagment
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import LoginForm from './LoginForm';
 
 const ReservationManagement = () => {
-  const { isAuthenticated, userToken } = useUser();
+  const { user, userToken } = useUser();
   const [reservations, setReservations] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (user) {
       fetchReservations();
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
-  const fetchReservations = () => {
-    fetch('/reservations', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${userToken}`,
-      },
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to fetch reservations');
-      return response.json();
-    })
-    .then(setReservations)
-    .catch(error => console.error('Error fetching reservations:', error));
+  const fetchReservations = async () => {
+    try {
+        const response = await fetch(`/reservations/user/${user.id}`, {
+            headers: { 'Authorization': `Bearer ${userToken}` },
+        });
+  
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+  
+        const data = await response.json();
+        setReservations(data);
+    } catch (error) {
+        console.error('Failed to fetch reservations:', error);
+    }
   };
 
   const deleteReservation = async (reservationId) => {
-    try {
-      await fetch(`/reservations/${reservationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-        },
-      });
+    const response = await fetch(`/reservations/${reservationId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${userToken}` },
+    });
+
+    if (response.ok) {
       setReservations(reservations.filter(reservation => reservation.id !== reservationId));
-      alert('Reservation successfully canceled');
-    } catch (error) {
-      console.error('Failed to cancel reservation:', error);
+      alert('Reservation successfully deleted');
+    } else {
+      alert('Failed to delete reservation');
     }
   };
 
-  if (!isAuthenticated) {
-    return <LoginForm />;
-  }
+  const handleUpdateClick = (reservationId) => {
+    navigate(`/update-reservation/${reservationId}`, { state: { reservationId } });
+  };
 
   return (
     <div>
@@ -54,8 +56,9 @@ const ReservationManagement = () => {
       {reservations.length > 0 ? (
         reservations.map(reservation => (
           <div key={reservation.id}>
-            <p>Reservation Details: {reservation.details} (Placeholder for actual reservation details)</p>
-            <button onClick={() => navigate(`/update-reservation/${reservation.id}`)}>Update</button>
+            <p>Reservation for {reservation.name} on {new Date(reservation.date).toLocaleDateString()} at {reservation.time}</p>
+            <p>Guests: {reservation.guests}</p>
+            <button onClick={() => handleUpdateClick(reservation.id)}>Update</button>
             <button onClick={() => deleteReservation(reservation.id)}>Cancel</button>
           </div>
         ))

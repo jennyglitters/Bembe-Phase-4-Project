@@ -1,3 +1,4 @@
+#app.py 
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -33,63 +34,93 @@ def create_app():
     @app.route('/users/register', methods=['POST'])
     def register_user():
         data = request.json
-        if User.query.filter_by(email=data['email']).first():
+        user = User.query.filter_by(email=data['email']).first()
+        if User:
             return jsonify({'message': 'Email already registered.'}), 400
-        hashed_password = generate_password_hash(data['password'], method='sha256')
+        #hashed_password = generate_password_hash(data['password'], method='sha256')
         user = User(name=data['name'], lastname=data['lastname'],
                     email=data['email'], phonenumber=data['phonenumber'],
-                    password_hash=hashed_password)
+                    password=data['password'])
+                    #password_hash=hashed_password)
         db.session.add(user)
         db.session.commit()
         return jsonify({"message": "User registered successfully"}), 201
+    
 
+    @app.route('/users/exists', methods=['GET'])
+    def check_user_exists():
+        email = request.args.get('email')
+        user = User.query.filter_by(email=email).first()
+        return jsonify(bool(user))
+    
     # User login
     @app.route('/users/login', methods=['POST'])
     def login_user():
         data = request.json
-        print("Login Attempt:", data)  # Debug print
+        #print("Login Attempt:", data)  # Debug print
         user = User.query.filter_by(email=data['email']).first()
-        if user:
-            print("User found:", user.email)  # More debug print
-        if user and check_password_hash(user.password_hash, data['password']):
-            access_token = create_access_token(identity=data['email'])
+        #if user:
+            #print("User found:", user.email)  # More debug print
+        if user and user.check_password_hash( data['password']):#user.password_hash,
+            access_token = create_access_token(identity=data['user.id'])#data['email']
             return jsonify(access_token=access_token), 200
         return jsonify({"message": "Invalid credentials."}), 401
 
     # Reservation management
-    @app.route('/reservations', methods=['POST', 'GET'])
+    @app.route('/reservations', methods=['POST'])
     @jwt_required()
-    def reservations():
-        if request.method == 'GET':
-            current_user_email = get_jwt_identity()
-            user = User.query.filter_by(email=current_user_email).first()
-            reservations = Reservation.query.filter_by(user_id=user.id).all()
-            return jsonify([reservation.serialize() for reservation in reservations]), 200
-        elif request.method == 'POST':
-            current_user_email = get_jwt_identity()
-            user = User.query.filter_by(email=current_user_email).first()
-            data = request.json
-            reservation = Reservation(user_id=user.id, **data)
-            db.session.add(reservation)
-            db.session.commit()
-            return jsonify({"message": "Reservation created successfully"}), 201
+    def create_reservation():
+        user_id = get_jwt_identity()
+        data = request.json
+        reservation = Reservation(user_id=user_id, **data)
+        db.session.add(reservation)
+        db.session.commit()
+        return jsonify(reservation.serialize()), 201
+    #     if request.method == 'GET':
+    #         current_user_email = get_jwt_identity()
+    #         user = User.query.filter_by(email=current_user_email).first()
+    #         reservations = Reservation.query.filter_by(user_id=user.id).all()
+    #         return jsonify([reservation.serialize() for reservation in reservations]), 200
+    #     elif request.method == 'POST':
+    #         current_user_email = get_jwt_identity()
+    #         user = User.query.filter_by(email=current_user_email).first()
+    #         data = request.json
+    #         reservation = Reservation(user_id=user.id, **data)
+    #         db.session.add(reservation)
+    #         db.session.commit()
+    #         return jsonify({"message": "Reservation created successfully"}), 201
 
-    # Specific reservation management
+    @app.route('/reservations/user/<int:user_id>', methods=['GET'])
+    @jwt_required()
+    def get_user_reservations(user_id):
+        current_user_id = get_jwt_identity()
+        if current_user_id != user_id:
+            return jsonify({"msg": "Unauthorized"}), 401
+        reservations = Reservation.query.filter_by(user_id=user_id).all()
+        return jsonify([reservation.serialize() for reservation in reservations]), 200
+
+
+    #  Specific reservation management
     @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
     @jwt_required()
     def manage_reservation(reservation_id):
         reservation = Reservation.query.get_or_404(reservation_id)
+        current_user_id = get_jwt_identity()
+        if reservation.user_id != current_user_id:
+         return jsonify({"msg": "Unauthorized"}), 403
+    
         if request.method == 'GET':
             return jsonify(reservation.serialize()), 200
 
-        current_user_email = get_jwt_identity()
-        if reservation.user.email != current_user_email:
-            return jsonify({"message": "Unauthorized"}), 403
+        # current_user_email = get_jwt_identity()
+        # if reservation.user.email != current_user_email:
+        #     return jsonify({"message": "Unauthorized"}), 403
 
         if request.method == 'PUT':
             data = request.json
             for key, value in data.items():
-                setattr(reservation, key, value)
+                if hasattr(reservation, key):
+                 setattr(reservation, key, value)
             db.session.commit()
             return jsonify({"message": "Reservation updated successfully"}), 200
 

@@ -1,3 +1,4 @@
+//LoginForm
 import React, { useState } from 'react';
 import { useUser } from './UserContext';
 
@@ -16,14 +17,26 @@ const LoginForm = () => {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email, password }),
           });
-          if (!response.ok) throw new Error('Login failed');
-          const { access_token } = await response.json();
-          login(access_token); // Use the login function from context
-      } catch (error) {
-          setError('Failed to login');
-          console.error(error);
-      }
-  };
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || 'Login failed');
+        }
+
+        login(data.access_token, data.user_id); // Update to include user_id
+    } catch (error) {
+        setError(error.message);
+        console.error(error);
+    }
+};
+//           if (!response.ok) throw new Error('Login failed');
+//           const { access_token } = await response.json();
+//           login(access_token); // Use the login function from context
+//       } catch (error) {
+//           setError('Failed to login');
+//           console.error(error);
+//       }
+//   };
 
   return (
       <form onSubmit={handleSubmit}>
@@ -40,7 +53,7 @@ const LoginForm = () => {
               onChange={(e) => setPassword(e.target.value)}
           />
           <button type="submit">Login</button>
-          {error && <p>{error}</p>}
+          {error && <p className="error">{error}</p>}
       </form>
   );
 };

@@ -1,3 +1,4 @@
+//UserContext
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const UserContext = createContext();
@@ -8,18 +9,23 @@ export const UserProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('userToken'));
     // Optionally store other user information (e.g., token)
     const [userToken, setUserToken] = useState(localStorage.getItem('userToken'));
+    const [userId, setUserId] = useState(localStorage.getItem('userId'));
 
-    const login = (token) => {
+    const login = (token,userId) => {
         setIsAuthenticated(true);
         setUserToken(token);
-        localStorage.setItem('userToken', token); // Store the token in localStorage for persistence
+        setUserId(userId);UserId(userId);UserId(userId);
+        localStorage.setItem('userToken', token);
+        localStorage.setItem('userId', userId);
     };
 
     const logout = () => {
         setIsAuthenticated(false);
         setUserToken('');
+        setUserId('null');
         setUser(null); // Clear the user state
-        localStorage.removeItem('userToken'); // Clean up token from localStorage
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userId'); // Clean up token from localStorage
     };
 
     // Automatically log out the user if the token is removed or invalidated
@@ -36,7 +42,7 @@ export const UserProvider = ({ children }) => {
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, setUser, isAuthenticated, userToken, login, logout }}>
+        <UserContext.Provider value={{ user, setUser, isAuthenticated, userToken, userId, login, logout }}>
             {children}
         </UserContext.Provider>
     );

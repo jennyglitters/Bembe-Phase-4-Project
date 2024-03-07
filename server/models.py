@@ -32,7 +32,7 @@ reservation_menu_item = db.Table('reservation_menu_item',
 )
    
 
-class User(db.Model):
+class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -40,6 +40,7 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True, nullable=False)
     phonenumber = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    reservations = db.relationship('Reservation', back_populates='user', lazy=True)
 
     # Constructor
     def __init__(self, name, lastname, email, phonenumber, password):
@@ -50,24 +51,33 @@ class User(db.Model):
         self.set_password(password)
 
     def set_password(self, password):
-        """Create hashed password."""
+       # """Create hashed password."""
         self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        #self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        """Check hashed password."""
+        #"""Check hashed password."""
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        #return check_password_hash(self.password_hash, password)
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phonenumber': self.phonenumber
+        }
+    
+    @validates('email')
+    def validate_email(self, key, email):  # Changed method name for clarity
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            raise ValueError("Invalid email address.")
+        return email
 
-    # @validates('email')
-    # def validate_user_email(self, key, value):  # Changed method name for clarity
-    #     if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
-    #         raise ValueError("Invalid email address.")
-    #     return value
-
-    # @validates('phonenumber')
-    # def validate_phonenumber(self, key, value):
-    #     if not re.match(r"^\+?\d{10,15}$", value):
-    #         raise ValueError("Invalid phone number format.")
-    #     return value
+    @validates('phonenumber')
+    def validate_phonenumber(self, key, phonenumber):  # Changed method name for clarity
+        if not re.match(r"^\+?\d{10,15}$", phonenumber):
+            raise ValueError("Invalid phone number format.")
+        return phonenumber
 
 class Reservation(db.Model, SerializerMixin):
     __tablename__ = 'reservations'
@@ -80,11 +90,13 @@ class Reservation(db.Model, SerializerMixin):
     time = db.Column(db.Time, nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
     special_notes = db.Column(db.String(500), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     # Many-to-many relationship is set up with MenuItem
     menu_items = db.relationship('MenuItem', secondary=reservation_menu_item, back_populates='reservations')
     order_items = db.relationship('OrderList', back_populates='reservation')  # This matches the relationship name in OrderList
-
+    user = db.relationship('User', back_populates='reservations')
+  
     def __init__(self, name, lastname, email, phonenumber, date, time, guest_count, special_notes=None):
         self.name = name
         self.lastname = lastname
@@ -95,48 +107,56 @@ class Reservation(db.Model, SerializerMixin):
         self.guest_count = guest_count
         self.special_notes = special_notes
 
-    # Validation methods
-    # @validates('name', 'lastname', 'email', 'phonenumber')
-    # def validate_not_empty(self, key, value):
-    #     if not value:
-    #         raise ValueError(f"{key} cannot be empty.")
-    #     return value
+    #Validation methods
+    @validates('name', 'lastname')
+    def validate_not_empty(self, key, value):
+        if not value:
+            raise ValueError(f"{key} cannot be empty.")
+        return value
 
-    # @validates('email')
-    # def validate_reservation_email(self, key, email):  # Changed method name for clarity
-    #     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-    #         raise ValueError("Invalid email address.")
-    #     return email
+    def validate_email(self, key, email):
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            raise ValueError("Invalid email address.")
+        return email
 
-    # @validates('phonenumber')
-    # def validate_reservation_phonenumber(self, key, value):  # Changed method name for clarity
-    #     """Validate the phonenumber format."""
-    #     if not re.match(r"^\+?\d{10,15}$", value):
-    #         raise ValueError("Invalid phone number format.")
-    #     return value
+    @validates('email')
+    def validate_reservation_email(self, key, email):  
+        return self.validate_email(key, email)
 
-    # @validates('guest_count')
-    # def validate_guest_count(self, key, value):
-    #     if value <= 0:
-    #         raise ValueError("Guest count must be greater than zero.")
-    #     return value
+    def validate_phonenumber(self, key, phonenumber):
+        """Validate the phonenumber format."""
+        if not re.match(r"^\+?\d{10,15}$", phonenumber):
+            raise ValueError("Invalid phone number format.")
+        return phonenumber
 
-    # # Serialization 
-    # def serialize(self):
-    #     """Converts this into a dictionary."""
-    #     return {
-    #         'id': self.id,
-    #         'name': self.name,
-    #         'lastname': self.lastname,
-    #         'email': self.email,
-    #         'phonenumber': self.phonenumber,
-    #         'date': self.date.isoformat(),
-    #         'time': self.time.isoformat(),
-    #         'guest_count': self.guest_count,
-    #         'special_notes': self.special_notes,
-    #         # Menu_items serialization defined in MenuItem
-    #         'menu_items': [item.serialize() for item in self.menu_items]
-    #     }
+    @validates('phonenumber')
+    def validate_reservation_phonenumber(self, key, phonenumber):  
+        return self.validate_phonenumber(key, phonenumber)
+
+
+    @validates('guest_count')
+    def validate_guest_count(self, key, value):
+        if value <= 0:
+            raise ValueError("Guest count must be greater than zero.")
+        return value
+
+    # Serialization 
+    def serialize(self):
+        """Converts this into a dictionary."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'lastname': self.lastname,
+            'email': self.email,
+            'phonenumber': self.phonenumber,
+            'date': self.date.isoformat(),
+            'time': self.time.isoformat(),
+            'guest_count': self.guest_count,
+            'special_notes': self.special_notes,
+            'menu_items': [item.serialize() for item in self.menu_items],
+            'user': self.user.serialize(),
+            'user_id': self.user_id
+        }
 
 class MenuItem(db.Model, SerializerMixin):
     __tablename__ = 'menu_items'
@@ -154,32 +174,32 @@ class MenuItem(db.Model, SerializerMixin):
         self.description = description
         self.price = price
 
-    # @validates('name')
-    # def validate_name(self, key, value):
-    #     if not value:
-    #         raise AssertionError('The name cannot be empty.')
-    #     return value
+    @validates('name')
+    def validate_name(self, key, value):
+        if not value:
+            raise AssertionError('The name cannot be empty.')
+        return value
 
-    # @validates('description')
-    # def validate_description(self, key, value):
-    #     if not value:
-    #         raise AssertionError('The description cannot be empty.')
-    #     return value
+    @validates('description')
+    def validate_description(self, key, value):
+        if not value:
+            raise AssertionError('The description cannot be empty.')
+        return value
 
-    # @validates('price')
-    # def validate_price(self, key, value):
-    #     if value is not None and value < 0:
-    #         raise AssertionError('The price cannot be negative.')
-    #     return value
+    @validates('price')
+    def validate_price(self, key, value):
+        if value is not None and value < 0:
+            raise AssertionError('The price cannot be negative.')
+        return value
 
-    # def serialize(self):
-    #     """Serializing menu item data for API responses."""
-    #     return {
-    #         'id': self.id,
-    #         'name': self.name,
-    #         'description': self.description,
-    #         'price': '{:.2f}'.format(self.price) if self.price is not None else None
-    #     }
+    def serialize(self):
+        """Serializing menu item data for API responses."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'price': '{:.2f}'.format(self.price) if self.price is not None else None
+        }
 
 class OrderList(db.Model, SerializerMixin):
     __tablename__ = 'order_list'
