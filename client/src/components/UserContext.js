@@ -14,7 +14,7 @@ export const UserProvider = ({ children }) => {
     const login = (token, userId) => {
         setIsAuthenticated(true);
         setUserToken(token);
-        setUserId(userId);
+        setUserId(userId);  // Fixed: Removed the repeated calls
         localStorage.setItem('userToken', token);
         localStorage.setItem('userId', userId);
     };

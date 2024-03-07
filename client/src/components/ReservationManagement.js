@@ -5,44 +5,50 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from './UserContext'; // Adjust according to your context setup
 
 const ReservationManagement = () => {
-  const { user, userToken } = useUser();
+  const { user, userToken, isAuthenticated } = useUser(); // Assuming these are available in your user context
   const [reservations, setReservations] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated && user) {
       fetchReservations();
     }
-  }, [user]);
+  }, [user, isAuthenticated]);
 
   const fetchReservations = async () => {
     try {
-        const response = await fetch(`/reservations/user/${user.id}`, {
-            headers: { 'Authorization': `Bearer ${userToken}` },
-        });
-  
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-  
-        const data = await response.json();
-        setReservations(data);
+      const response = await fetch(`/reservations/user/${user.id}`, {
+        headers: { 'Authorization': `Bearer ${userToken}` },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch reservations');
+      }
+
+      const data = await response.json();
+      setReservations(data);
     } catch (error) {
-        console.error('Failed to fetch reservations:', error);
+      console.error('Error:', error);
     }
   };
 
   const deleteReservation = async (reservationId) => {
-    const response = await fetch(`/reservations/${reservationId}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${userToken}` },
-    });
+    if (window.confirm('Are you sure you want to cancel this reservation?')) {
+      try {
+        const response = await fetch(`/reservations/${reservationId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${userToken}` },
+        });
 
-    if (response.ok) {
-      setReservations(reservations.filter(reservation => reservation.id !== reservationId));
-      alert('Reservation successfully deleted');
-    } else {
-      alert('Failed to delete reservation');
+        if (!response.ok) {
+          throw new Error('Failed to cancel reservation');
+        }
+
+        setReservations(current => current.filter(reservation => reservation.id !== reservationId));
+        alert('Reservation successfully canceled');
+      } catch (error) {
+        console.error('Failed to cancel reservation:', error);
+      }
     }
   };
 
@@ -53,20 +59,26 @@ const ReservationManagement = () => {
   return (
     <div>
       <h1>Manage Your Reservations</h1>
-      {reservations.length > 0 ? (
-        reservations.map(reservation => (
-          <div key={reservation.id}>
-            <p>Reservation for {reservation.name} on {new Date(reservation.date).toLocaleDateString()} at {reservation.time}</p>
-            <p>Guests: {reservation.guests}</p>
-            <button onClick={() => handleUpdateClick(reservation.id)}>Update</button>
-            <button onClick={() => deleteReservation(reservation.id)}>Cancel</button>
-          </div>
-        ))
+      {isAuthenticated ? (
+        reservations.length > 0 ? (
+          reservations.map(reservation => (
+            <div key={reservation.id}>
+              <p>Reservation for {reservation.name} on {new Date(reservation.date).toLocaleDateString()} at {reservation.time}</p>
+              <p>Guests: {reservation.guests}</p>
+              <button onClick={() => handleUpdateClick(reservation.id)}>Update</button>
+              <button onClick={() => deleteReservation(reservation.id)}>Cancel</button>
+            </div>
+          ))
+        ) : <p>No reservations found. Please make a reservation.</p>
       ) : (
-        <p>No reservations found. Please make a reservation.</p>
+        <p>Please <button onClick={() => navigate('/login')}>login</button> to manage your reservations.</p>
       )}
     </div>
   );
+};
+
+export default ReservationManagement;
+
     const { user, isAuthenticated, logoutUser } = useContext(UserContext); // Use your actual context structure
     const [reservations, setReservations] = useState([]);
     const navigate = useNavigate();

@@ -81,20 +81,23 @@ const ReservationForm = ({ reservationId }) => {
 
   // Handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
-    if (isAuthenticated) {
-      // If the user is authenticated, create or update the reservation
-      const endpoint = reservationId ? `/reservations/${reservationId}` : '/reservations';
-      const method = reservationId ? 'PUT' : 'POST';
+    const endpoint = reservationId ? `/reservations/${reservationId}` : '/reservations';
+    const method = reservationId ? 'PUT' : 'POST';
 
-      try {
+    try {
         const response = await fetch(endpoint, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${userToken}`,
-          },
-          body: JSON.stringify(values),
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userToken}`,
+            },
+            body: JSON.stringify(values),
         });
+      } catch (error) {
+      }
+
+      setSubmitting(false);
+  };
   const handleSubmit = (values, { setSubmitting, resetForm }) => {
     // Determine if this is an update or a new reservation based on the presence of a currentReservation ID
     const isUpdate = currentReservation && currentReservation.id;
@@ -182,12 +185,10 @@ const ReservationForm = ({ reservationId }) => {
   };
 
   return (
-<<<<<<< HEAD
     <div>
       <h1>{reservationId ? 'Update Your Reservation' : 'Make a Reservation'}</h1>
       <Formik initialValues={initialValues} enableReinitialize onSubmit={handleSubmit}>
         {({ setFieldValue, values }) => (
-=======
       <div>
           <h2>Make a Reservation</h2>
           {submissionMessage && <div className="submission-message">{submissionMessage}</div>}
@@ -208,7 +209,6 @@ const ReservationForm = ({ reservationId }) => {
               onSubmit={handleSubmit}
           >
         {({ values, setFieldValue, isSubmitting, resetForm }) => (
->>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
           <Form>
             {/* Render the form fields */}
             <Field name="name" placeholder="First Name" />
@@ -223,9 +223,7 @@ const ReservationForm = ({ reservationId }) => {
             {/* Render additional form fields */}
             {/* ... */}
 
-<<<<<<< HEAD
             <button type="submit">{reservationId ? 'Update Reservation' : 'Submit Reservation'}</button>
-=======
             <div className="form-field">
               <label htmlFor="date">Date</label>
               <ReactDatePicker
@@ -309,7 +307,6 @@ const ReservationForm = ({ reservationId }) => {
             <button type="button" onClick={() => handleClearForm(resetForm)} className="clear-form-button">
               Clear Form
             </button>
->>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
           </Form>
         )}
       </Formik>

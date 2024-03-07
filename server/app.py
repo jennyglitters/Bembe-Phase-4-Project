@@ -38,15 +38,11 @@ def register_user():
 # User login/Should Got To reservation Form
 @app.route('/users/login', methods=['POST'])
 def login_user():
-    data = request.get_json()
-    print("Login Attempt:", data)  # Debug print
+    data = request.json
     user = User.query.filter_by(email=data['email']).first()
-    if user:
-        print("User found:", user.email)  # More debug print
     if user and user.check_password(data['password']):
-        access_token = create_access_token(identity=user.id)
-        return jsonify(access_token=access_token, user_id=user.id), 200
-
+        access_token = create_access_token(identity=user.id)  # Correctly setting user ID as identity
+        return jsonify(access_token=access_token, user_id=user.id), 200  # Returning user ID
     return jsonify({"message": "Invalid credentials."}), 401
 
 
