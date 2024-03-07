@@ -1,3 +1,4 @@
+#app.py 
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -7,7 +8,9 @@ from datetime import timedelta
 from flask_migrate import Migrate
 from flask_restful import Api
 from models import db, User, MenuItem, Reservation
+from sqlalchemy.exc import IntegrityError
 import os
+import bcrypt 
 from config import Config
 def create_app():
     app = Flask(__name__)
@@ -35,10 +38,10 @@ def create_app():
         data = request.json
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'message': 'Email already registered.'}), 400
-        hashed_password = generate_password_hash(data['password'], method='sha256')
+        #hashed_password = generate_password_hash(data['password'], method='sha256')
         user = User(name=data['name'], lastname=data['lastname'],
-                    email=data['email'], phonenumber=data['phonenumber'],
-                    password_hash=hashed_password)
+                    email=data['email'], phonenumber=data['phonenumber']),
+        user.set_password(data['password'])
         db.session.add(user)
         db.session.commit()
         return jsonify({"message": "User registered successfully"}), 201
@@ -51,9 +54,11 @@ def create_app():
         user = User.query.filter_by(email=data['email']).first()
         if user:
             print("User found:", user.email)  # More debug print
-        if user and check_password_hash(user.password_hash, data['password']):
+        if user and user.check_password(data['password']):
+        #if user and check_password_hash(user.password_hash, data['password']):
             access_token = create_access_token(identity=data['email'])
             return jsonify(access_token=access_token), 200
+
         return jsonify({"message": "Invalid credentials."}), 401
 
     # Reservation management
@@ -68,11 +73,21 @@ def create_app():
         elif request.method == 'POST':
             current_user_email = get_jwt_identity()
             user = User.query.filter_by(email=current_user_email).first()
+            if not user:
+                return jsonify({"message": "User not found."}), 404
+
             data = request.json
-            reservation = Reservation(user_id=user.id, **data)
-            db.session.add(reservation)
-            db.session.commit()
-            return jsonify({"message": "Reservation created successfully"}), 201
+            try:
+                reservation = Reservation(user_id=user.id, **data)
+                db.session.add(reservation)
+                db.session.commit()
+                return jsonify({"message": "Reservation created successfully"}), 201
+            except IntegrityError as e:
+                db.session.rollback()
+                return jsonify({"message": "Failed to create reservation.", "error": str(e)}), 422
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"message": "An error occurred.", "error": str(e)}), 500
 
     # Specific reservation management
     @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
