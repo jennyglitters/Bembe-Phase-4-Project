@@ -10,15 +10,9 @@ from flask_restful import Api
 from models import db, User, MenuItem, Reservation
 import os
 from config import Config
+
 def create_app():
     app = Flask(__name__)
-    # Database configuration
-    #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yourdatabase.db'
-    #app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    # JWT and Secret Key configuration
-    #app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
-    #app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
-    #app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
     app.config.from_object(Config)
     db.init_app(app)
     jwt = JWTManager(app)
@@ -26,14 +20,52 @@ def create_app():
     Migrate(app, db)
     api = Api(app)
 
-    #@app.before_first_request
-    #def create_tables():
-       # db.create_all()
 
-    # User registration
-    @app.route('/users/register', methods=['POST'])
-    def register_user():
+# User registration
+@app.route('/users/register', methods=['POST'])
+def register_user():
+    data = request.json
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'message': 'Email already registered.'}), 400
+    #hashed_password = generate_password_hash(data['password'], method='sha256')
+    user = User(name=data['name'], lastname=data['lastname'],
+                email=data['email'], phonenumber=data['phonenumber']),
+    user.set_password(data['password'])
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"message": "User registered successfully"}), 201
+
+# User login/Should Got To reservation Form
+@app.route('/users/login', methods=['POST'])
+def login_user():
+    data = request.get_json()
+    print("Login Attempt:", data)  # Debug print
+    user = User.query.filter_by(email=data['email']).first()
+    if user:
+        print("User found:", user.email)  # More debug print
+    if user and user.check_password(data['password']):
+    #if user and check_password_hash(user.password_hash, data['password']):
+        access_token = create_access_token(identity=data['email'])
+        return jsonify(access_token=access_token), 200
+
+    return jsonify({"message": "Invalid credentials."}), 401
+
+
+# /ReservationForm Handling Existing Updates For Customer's With Reservations and New Customers Without Reservations
+@app.route('/reservations', methods=['POST', 'GET'])
+@jwt_required(optional=True)  # Make JWT token optional
+def reservations():
+    if request.method == 'GET':
+        current_user_email = get_jwt_identity()
+        if not current_user_email:
+            return jsonify({"message": "Authentication required"}), 401
+        user = User.query.filter_by(email=current_user_email).first()
+        reservations = Reservation.query.filter_by(user_id=user.id).all()
+        return jsonify([reservation.serialize() for reservation in reservations]), 200
+
+    elif request.method == 'POST':
         data = request.json
+<<<<<<< HEAD
         user = User.query.filter_by(email=data['email']).first()
         if User:
             return jsonify({'message': 'Email already registered.'}), 400
@@ -98,6 +130,48 @@ def create_app():
             return jsonify({"msg": "Unauthorized"}), 401
         reservations = Reservation.query.filter_by(user_id=user_id).all()
         return jsonify([reservation.serialize() for reservation in reservations]), 200
+=======
+        current_user_email = get_jwt_identity()
+
+        # Scenario: Existing User (logged in) Creating/Updating Reservation
+        if current_user_email:
+            user = User.query.filter_by(email=current_user_email).first()
+
+        # Scenario: New or Unauthenticated User
+        else:
+            user = User.query.filter_by(email=data['email']).first()
+            if not user:
+                # Optionally create a new user or handle according to your requirements
+                user = User(name=data['name'], lastname=data['lastname'],
+                            email=data['email'], phonenumber=data['phonenumber'])
+                user.set_password(some_default_or_random_password)  # Define this logic
+                db.session.add(user)
+                db.session.commit()
+
+        # Creating or Updating a Reservation
+        try:
+            if 'reservation_id' in data:  # Check if updating an existing reservation
+                reservation = Reservation.query.filter_by(id=data['reservation_id'], user_id=user.id).first()
+                if reservation:
+                    # Update existing reservation details
+                    for key, value in data.items():
+                        if hasattr(reservation, key):
+                            setattr(reservation, key, value)
+                else:
+                    return jsonify({"message": "Reservation not found."}), 404
+            else:
+                # Create new reservation
+                reservation = Reservation(user_id=user.id, **data)
+                db.session.add(reservation)
+            db.session.commit()
+            return jsonify({"message": "Reservation handled successfully"}), 201
+        except IntegrityError as e:
+            db.session.rollback()
+            return jsonify({"message": "Failed to handle reservation.", "error": str(e)}), 422
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"message": "An error occurred.", "error": str(e)}), 500
+>>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
 
 
     #  Specific reservation management
