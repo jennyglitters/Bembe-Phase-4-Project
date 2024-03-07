@@ -22,6 +22,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/menu" element={<Menu />} /> 
+              <Route path="/create-reservation" element={<ReservationForm />} />
+              <Route path="/update-reservation/:reservationId" element={<ReservationForm />} />
               <Route path="/reservations" element={<ReservationForm />} /> 
               <Route path="/location-hours" element={<LocationHours />} />
               <Route path="/manage-reservation" element={<ReservationManagement />} />
