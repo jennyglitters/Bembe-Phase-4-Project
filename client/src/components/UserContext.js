@@ -11,13 +11,14 @@ export const UserProvider = ({ children }) => {
     const [userToken, setUserToken] = useState(localStorage.getItem('userToken'));
     const [userId, setUserId] = useState(localStorage.getItem('userId'));
 
-    const login = (token,userId) => {
+    const login = (token, userId) => {
         setIsAuthenticated(true);
         setUserToken(token);
-        setUserId(userId);UserId(userId);UserId(userId);
+        setUserId(userId);
         localStorage.setItem('userToken', token);
         localStorage.setItem('userId', userId);
     };
+    
 
     const logout = () => {
         setIsAuthenticated(false);
@@ -48,4 +49,3 @@ export const UserProvider = ({ children }) => {
     );
 };
 
-export const useUser = () => useContext(UserContext);

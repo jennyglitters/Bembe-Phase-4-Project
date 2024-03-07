@@ -86,7 +86,6 @@ const ReservationForm = ({ reservationId }) => {
       const endpoint = reservationId ? `/reservations/${reservationId}` : '/reservations';
       const method = reservationId ? 'PUT' : 'POST';
 
-<<<<<<< HEAD
       try {
         const response = await fetch(endpoint, {
           method: method,
@@ -96,7 +95,6 @@ const ReservationForm = ({ reservationId }) => {
           },
           body: JSON.stringify(values),
         });
-=======
   const handleSubmit = (values, { setSubmitting, resetForm }) => {
     // Determine if this is an update or a new reservation based on the presence of a currentReservation ID
     const isUpdate = currentReservation && currentReservation.id;
@@ -140,7 +138,6 @@ const ReservationForm = ({ reservationId }) => {
       setSubmitting(false);
     });
   };
->>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
 
         if (response.ok) {
           setSubmissionStatus(`Reservation ${reservationId ? 'updated' : 'created'} successfully.`);

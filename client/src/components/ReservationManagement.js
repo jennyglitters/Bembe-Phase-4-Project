@@ -1,14 +1,10 @@
-<<<<<<< HEAD
 //ReservationManagment
 import React, { useState, useEffect } from 'react';
-=======
 import React, { useState, useEffect, useContext } from 'react';
->>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from './UserContext'; // Adjust according to your context setup
 
 const ReservationManagement = () => {
-<<<<<<< HEAD
   const { user, userToken } = useUser();
   const [reservations, setReservations] = useState([]);
   const navigate = useNavigate();
@@ -71,7 +67,6 @@ const ReservationManagement = () => {
       )}
     </div>
   );
-=======
     const { user, isAuthenticated, logoutUser } = useContext(UserContext); // Use your actual context structure
     const [reservations, setReservations] = useState([]);
     const navigate = useNavigate();
@@ -136,7 +131,6 @@ const ReservationManagement = () => {
             )}
         </div>
     );
->>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
 };
 
 export default ReservationManagement;

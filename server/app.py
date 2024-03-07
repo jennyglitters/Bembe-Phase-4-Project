@@ -44,9 +44,8 @@ def login_user():
     if user:
         print("User found:", user.email)  # More debug print
     if user and user.check_password(data['password']):
-    #if user and check_password_hash(user.password_hash, data['password']):
-        access_token = create_access_token(identity=data['email'])
-        return jsonify(access_token=access_token), 200
+        access_token = create_access_token(identity=user.id)
+        return jsonify(access_token=access_token, user_id=user.id), 200
 
     return jsonify({"message": "Invalid credentials."}), 401
 
@@ -65,7 +64,6 @@ def reservations():
 
     elif request.method == 'POST':
         data = request.json
-<<<<<<< HEAD
         user = User.query.filter_by(email=data['email']).first()
         if User:
             return jsonify({'message': 'Email already registered.'}), 400
@@ -130,7 +128,6 @@ def reservations():
             return jsonify({"msg": "Unauthorized"}), 401
         reservations = Reservation.query.filter_by(user_id=user_id).all()
         return jsonify([reservation.serialize() for reservation in reservations]), 200
-=======
         current_user_email = get_jwt_identity()
 
         # Scenario: Existing User (logged in) Creating/Updating Reservation
@@ -171,7 +168,6 @@ def reservations():
         except Exception as e:
             db.session.rollback()
             return jsonify({"message": "An error occurred.", "error": str(e)}), 500
->>>>>>> 38fa03d388ae133826db03fa34ee33ca861727d2
 
 
     #  Specific reservation management
