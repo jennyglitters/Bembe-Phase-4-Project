@@ -90,7 +90,7 @@ class Reservation(db.Model, SerializerMixin):
     time = db.Column(db.Time, nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
     special_notes = db.Column(db.String(500), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     # Many-to-many relationship is set up with MenuItem
     menu_items = db.relationship('MenuItem', secondary=reservation_menu_item, back_populates='reservations')
@@ -218,14 +218,14 @@ class OrderList(db.Model, SerializerMixin):
         self.quantity = quantity
         self.special_requests = special_requests
 
-    # def serialize(self):
-    #     """Converts this into a dictionary for API responses."""
-    #     return {
-    #         'reservation_id': self.reservation_id,
-    #         'menu_item_id': self.menu_item_id,
-    #         'quantity': self.quantity,
-    #         'special_requests': self.special_requests
-    #     }
+    def serialize(self):
+         """Converts this into a dictionary for API responses."""
+         return {
+             'reservation_id': self.reservation_id,
+             'menu_item_id': self.menu_item_id,
+             'quantity': self.quantity,
+             'special_requests': self.special_requests
+         }
 
 def init_app(app):
     db.init_app(app)

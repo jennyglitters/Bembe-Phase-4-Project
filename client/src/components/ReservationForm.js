@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useUser } from './UserContext';
-import { useParams } from 'react-router-dom';
-
+import { useParams } from 'react-router-dom'; // Make sure you have this import
+import { useUser } from './UserContext'; // Adjust this import based on your project structure
 
 const ReservationForm = () => {
   const { reservationId } = useParams();
-  const { userToken, isAuthenticated } = useUser();
+  const { userToken } = useUser(); // Assuming useUser returns userToken
   const [menuItems, setMenuItems] = useState([]);
   const [initialValues, setInitialValues] = useState({
     name: '',
@@ -17,7 +16,7 @@ const ReservationForm = () => {
     phonenumber: '',
     date: new Date(),
     time: '',
-    guests: 1,
+    guests: '',
     menuItems: [],
     specialNotes: '',
   });
@@ -26,7 +25,11 @@ const ReservationForm = () => {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await fetch('/menu_items');
+        const response = await fetch('/menu_items', {
+          headers: {
+            'Authorization': `Bearer ${userToken}`,
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setMenuItems(data);
@@ -38,38 +41,35 @@ const ReservationForm = () => {
       }
     };
 
-    fetchMenuItems();
-  }, []);
+    const fetchReservationDetails = async () => {
+      try {
+        const response = await fetch(`/reservations/${reservationId}`, {
+          headers: { 'Authorization': `Bearer ${userToken}` },
+        });
 
-  useEffect(() => {
-    if (reservationId) {
-      const fetchReservationDetails = async () => {
-        try {
-          const response = await fetch(`/reservations/${reservationId}`, {
-            headers: { 'Authorization': `Bearer ${userToken}` },
+        if (response.ok) {
+          const reservation = await response.json();
+          setInitialValues({
+            name: reservation.name,
+            lastname: reservation.lastname,
+            email: reservation.email,
+            phonenumber: reservation.phonenumber,
+            date: new Date(reservation.date),
+            time: reservation.time,
+            guests: reservation.guests.toString(),
+            menuItems: reservation.menuItems.map(item => item.id),
+            specialNotes: reservation.specialNotes,
           });
-
-          if (response.ok) {
-            const reservation = await response.json();
-            setInitialValues({
-              name: reservation.name,
-              lastname: reservation.lastname,
-              email: reservation.email,
-              phonenumber: reservation.phonenumber,
-              date: new Date(reservation.date),
-              time: reservation.time,
-              guests: reservation.guests.toString(),
-              menuItems: reservation.menuItems.map(item => item.id), // Assuming you want to keep IDs
-              specialNotes: reservation.specialNotes,
-            });
-          } else {
-            console.error('Failed to fetch reservation details.');
-          }
-        } catch (error) {
-          console.error('Error:', error);
+        } else {
+          console.error('Failed to fetch reservation details.');
         }
-      };
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
 
+    fetchMenuItems();
+    if (reservationId) {
       fetchReservationDetails();
     }
   }, [reservationId, userToken]);
@@ -91,7 +91,8 @@ const ReservationForm = () => {
       if (response.ok) {
         setSubmissionStatus(`Reservation ${reservationId ? 'updated' : 'created'} successfully.`);
       } else {
-        throw new Error(`Failed to ${reservationId ? 'update' : 'create'} reservation.`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to ${reservationId ? 'update' : 'create'} reservation.`);
       }
     } catch (error) {
       setSubmissionStatus(error.message);
@@ -123,11 +124,32 @@ const ReservationForm = () => {
                 onChange={date => setFieldValue('date', date)}
                 dateFormat="MMMM d, yyyy"
                 minDate={new Date()}
+                name="date"
               />
               <ErrorMessage name="date" component="div" />
             </div>
-
-            {/* Include other fields like time, guests, menu items, and special notes here */}
+            <div>
+              <label htmlFor="time">Time</label>
+              <Field name="time" type="time" placeholder="HH:MM" />
+              <ErrorMessage name="time" component="div" />
+            </div>
+            <div>
+              <label htmlFor="menuItems">Menu Items</label>
+              <Field as="select" name="menuItems" multiple={true}>
+                {menuItems.map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Field>
+              <ErrorMessage name="menuItems" component="div" />
+            </div>
+            <div>
+              <label htmlFor="specialNotes">Special Notes</label>
+              <Field name="specialNotes" placeholder="Special Notes" />
+              <ErrorMessage name="specialNotes" component="div" />
+            </div>
+            {/* Additional fields for time, guests, menu items, and special notes */}
 
             <button type="submit" disabled={isSubmitting}>
               {reservationId ? 'Update Reservation' : 'Submit Reservation'}

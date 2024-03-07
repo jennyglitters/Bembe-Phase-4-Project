@@ -11,11 +11,10 @@ def seed_data():
         db.drop_all()
         db.create_all()
 
-        # Users
         users_data = [
-            {"name": "Alice", "lastname": "Green", "email": "alice.green@example.com", "phonenumber": "+15550100", "password": "password123"},
-            {"name": "Bob", "lastname": "Smith", "email": "bob.smith@example.com", "phonenumber": "+15550101", "password": "password123"},
-            # Add more users as needed
+            {"name": "Alice", "lastname": "Green", "email": "alice.green@example.com", "phonenumber": "+15550100234", "password": "password123"},
+            {"name": "Bob", "lastname": "Smith", "email": "bob.smith@example.com", "phonenumber": "+15550101234", "password": "password123"},
+            # Ensure all phone numbers are in the correct format
         ]
         # users_data = ["Alice Green", "Bob Smith", "Charlie Johnson", "Dana Lee", "Evan Wright",
         #          "Fiona Harris", "George King", "Hannah Scott", "Ian Turner", "Jenna Brown",
