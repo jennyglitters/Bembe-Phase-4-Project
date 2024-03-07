@@ -49,31 +49,48 @@ const ReservationForm = () => {
     return slots;
   };
 
-  const handleSubmit = (values, actions) => {
-    const token = localStorage.getItem('accessToken'); // Assume the token is stored in localStorage
-    fetch('/reservations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`  // Include the token in the request
-      },
-      body: JSON.stringify(values),
+  const handleSubmit = (values, { setSubmitting, resetForm }) => {
+    // Determine if this is an update or a new reservation based on the presence of a currentReservation ID
+    const isUpdate = currentReservation && currentReservation.id;
+    const endpoint = isUpdate ? `/reservations/${currentReservation.id}` : '/reservations';
+    const method = isUpdate ? 'PUT' : 'POST';
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+  
+    // Add Authorization header if a token exists (user is logged in)
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  
+    // Adjust payload for PUT request to include existing reservation data
+    const payload = isUpdate ? { ...currentReservation, ...values } : values;
+  
+    fetch(endpoint, {
+      method: method,
+      headers: headers,
+      body: JSON.stringify(payload),
     })
-    .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-      setCurrentReservation(data);
-      setSubmissionMessage('Reservation created successfully!');
-      actions.resetForm();
+      if (data.message) {
+        // Handle success
+        setSubmissionMessage(data.message);
+        setCurrentReservation(data); // Update state with new/current reservation data
+        resetForm();
+      } else {
+        // Handle potential error message from API
+        throw new Error('Failed to process reservation');
+      }
     })
     .catch(error => {
-      console.error('Error creating reservation:', error);
-      setSubmissionMessage('Failed to create reservation. Please try again.');
-      actions.setErrors({ submit: 'There was a problem creating your reservation.' });
+      console.error('Error:', error);
+      setSubmissionMessage(error.message || 'Failed to create/update reservation. Please try again.');
     })
-    .finally(() => actions.setSubmitting(false));
+    .finally(() => {
+      setSubmitting(false);
+    });
   };
 
   const handleClearForm = (resetForm) => {
@@ -98,18 +115,19 @@ const ReservationForm = () => {
           <h2>Make a Reservation</h2>
           {submissionMessage && <div className="submission-message">{submissionMessage}</div>}
           <Formik
-              initialValues={{
+                  initialValues={{
                   name: '',
                   lastname: '',
                   email: '',
-                  password: '', // Including password 
+                  password: '', 
                   phonenumber: '',
                   date: '',
                   time: '',
                   guests: '',
                   menuItems: [],
-                  specialNotes: '', 
+                  specialNotes: '',
               }}
+              validate={validate} // Here you pass the validate function to Formik
               onSubmit={handleSubmit}
           >
         {({ values, setFieldValue, isSubmitting, resetForm }) => (
@@ -147,11 +165,12 @@ const ReservationForm = () => {
             <div className="form-field">
               <label htmlFor="date">Date</label>
               <ReactDatePicker
-                selected={values.date}
+                selected={(values.date && new Date(values.date)) || null}
                 onChange={date => setFieldValue('date', date)}
                 dateFormat="MMMM d, yyyy"
                 minDate={new Date()}
                 className="form-control"
+                name="date"
               />
               <ErrorMessage name="date" component="div" className="field-error" />
             </div>
