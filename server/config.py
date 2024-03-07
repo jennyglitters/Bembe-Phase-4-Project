@@ -4,9 +4,10 @@ from flask_cors import CORS
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
+from flask_jwt_extended import JWTManager, create_access_token
 from flask_restful import Api
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
-import bcrypt
 
 # Instantiate CORS
 class Config:
