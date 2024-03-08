@@ -1,35 +1,42 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ReservationManagement = () => {
-  const [reservations, setReservations] = useState([]);
-  const navigate = useNavigate();
+ const [reservations, setReservations] = useState([]);
+ const navigate = useNavigate();
 
-  const fetchReservations = useCallback(async () => {
-    try {
-      const response = await fetch('/reservations', {
-        method: 'GET',
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to fetch reservations');
+ useEffect(() => {
+    // Fetch reservations for the current user
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch('/reservations', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Failed to fetch reservations');
+        }
+        const data = await response.json();
+        setReservations(data);
+      } catch (error) {
+        console.error('Error:', error);
       }
-      const data = await response.json();
-      setReservations(data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }, []); // Removed dependencies
+    };
 
-  useEffect(() => {
     fetchReservations();
-  }, [fetchReservations]);
+ }, []);
 
-  const deleteReservation = async (reservationId) => {
+ const deleteReservation = async (reservationId) => {
     if (window.confirm('Are you sure you want to cancel this reservation?')) {
       try {
         const response = await fetch(`/reservations/${reservationId}`, {
           method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
         if (!response.ok) {
           const errorText = await response.text();
@@ -42,13 +49,17 @@ const ReservationManagement = () => {
         alert(error.message);
       }
     }
-  };
+ };
 
-  const handleUpdateClick = (reservationId) => {
-    navigate(`/update-reservation/${reservationId}`);
-  };
+ const handleUpdateClick = (reservationId) => {
+  navigate(`/reservations/${reservationId}`);
+ };
 
-  return (
+ const handleCreateClick = () => {
+  navigate('/reservations');
+ };
+
+ return (
     <div>
       <h1>Manage Your Reservations</h1>
       {reservations.length > 0 ? (
@@ -61,9 +72,9 @@ const ReservationManagement = () => {
           </div>
         ))
       ) : <p>No reservations found. Please make a reservation.</p>}
-      <button onClick={() => navigate('/create-reservation')}>Create New Reservation</button>
+      <button onClick={handleCreateClick}>Create New Reservation</button>
     </div>
-  );
+ );
 };
 
 export default ReservationManagement;

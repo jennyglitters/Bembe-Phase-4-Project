@@ -14,7 +14,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
-from config import Config
+from config import db
 
 metadata = MetaData(naming_convention={
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
@@ -50,15 +50,7 @@ class User(db.Model, SerializerMixin):
         self.phonenumber = phonenumber
         self.set_password(password)
 
-    def set_password(self, password):
-       # """Create hashed password."""
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        #self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
-        #"""Check hashed password."""
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
-        #return check_password_hash(self.password_hash, password)
     def serialize(self):
         return {
             'id': self.id,

@@ -57,7 +57,7 @@ const Menu = () => {
       <div className="menu-section">
         <h2>Starters & Macs</h2>
         {renderMenuItem(6, "Plantain & Pork Guacamole", "$7.15", "Our twist on guacamole, served on a bed of mashed plantains and topped with crispy pork bits for a Caribbean flair.")}
-        {renderMenuItem(7, "Dominican Fried Cheese Mac", null, "A creamy mac and cheese with a Dominican twist, featuring fried cheese, traditional white cheese, and a breadcrumb topping.")}
+        {renderMenuItem(7, "Dominican Fried Cheese Mac", "A creamy mac and cheese with a Dominican twist, featuring fried cheese, traditional white cheese, and a breadcrumb topping.")}
         {renderMenuItem(8, "Three-Cheese Caribbean Mac", "$15.45", "Our classic mac and cheese enriched with a trio of Caribbean cheeses, giving it a unique, tropical taste.")}
         {renderMenuItem(9, "Boriqua Lobster Mac", "$18.54", "Lobster mac and cheese inspired by Puerto Rican flavors, with a creamy Creole sauce and a crispy breadcrumb topping.")}
         {renderMenuItem(10, "Truffle & Spinach Caribbean Mac", "$17.51", "Elevate your mac and cheese experience with our truffle and spinach blend, featuring Caribbean cheeses for a tropical touch.")}
