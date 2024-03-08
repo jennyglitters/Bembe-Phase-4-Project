@@ -90,15 +90,15 @@ class Reservation(db.Model, SerializerMixin):
     time = db.Column(db.Time, nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
     special_notes = db.Column(db.String(500), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     # Many-to-many relationship is set up with MenuItem
     menu_items = db.relationship('MenuItem', secondary=reservation_menu_item, back_populates='reservations')
     order_items = db.relationship('OrderList', back_populates='reservation')  # This matches the relationship name in OrderList
     user = db.relationship('User', back_populates='reservations')
   
-    def __init__(self, name, lastname, email, phonenumber, date, time, guest_count, special_notes=None):
-        self.name = name
+    def __init__(self, user_id, name, lastname, email, phonenumber, date, time, guest_count, special_notes=None):
+        self.user_id = user_id
         self.lastname = lastname
         self.email = email
         self.phonenumber = phonenumber
@@ -106,6 +106,7 @@ class Reservation(db.Model, SerializerMixin):
         self.time = time
         self.guest_count = guest_count
         self.special_notes = special_notes
+        self.name = name
 
     #Validation methods
     @validates('name', 'lastname')

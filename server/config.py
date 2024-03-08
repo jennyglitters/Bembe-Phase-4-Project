@@ -14,9 +14,7 @@ class Config:
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///bembe.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = 'your-secret-key'
-    JWT_SECRET_KEY = 'your-jwt-secret-key'  # Add a secret key for JWT
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+
 #Remember, the SECRET_KEY and JWT_SECRET_KEY should be kept secret and not 
 #hardcoded in production. You might want to consider using environment variables to
 # manage these sensitive keys securely. For example:

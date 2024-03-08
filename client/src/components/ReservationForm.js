@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useParams } from 'react-router-dom'; // Make sure you have this import
-import { useUser } from './UserContext'; // Adjust this import based on your project structure
+import { useParams } from 'react-router-dom';
 
 const ReservationForm = () => {
   const { reservationId } = useParams();
-  const { userToken } = useUser(); // Assuming useUser returns userToken
   const [menuItems, setMenuItems] = useState([]);
   const [initialValues, setInitialValues] = useState({
     name: '',
@@ -25,11 +23,7 @@ const ReservationForm = () => {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await fetch('/menu_items', {
-          headers: {
-            'Authorization': `Bearer ${userToken}`,
-          },
-        });
+        const response = await fetch('/menu_items');
         if (response.ok) {
           const data = await response.json();
           setMenuItems(data);
@@ -43,9 +37,7 @@ const ReservationForm = () => {
 
     const fetchReservationDetails = async () => {
       try {
-        const response = await fetch(`/reservations/${reservationId}`, {
-          headers: { 'Authorization': `Bearer ${userToken}` },
-        });
+        const response = await fetch(`/reservations/${reservationId}`);
 
         if (response.ok) {
           const reservation = await response.json();
@@ -72,21 +64,24 @@ const ReservationForm = () => {
     if (reservationId) {
       fetchReservationDetails();
     }
-  }, [reservationId, userToken]);
+  }, [reservationId]);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     const endpoint = reservationId ? `/reservations/${reservationId}` : '/reservations';
     const method = reservationId ? 'PUT' : 'POST';
-
+    const email = values.email; // Extract email from values
+    delete values.email; // Remove email from values before sending
+   
+    console.log('Sending request to:', endpoint, 'with method:', method, 'and body:', values);
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${endpoint}?email=${encodeURIComponent(email)}`, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
         },
         body: JSON.stringify(values),
       });
+  
 
       if (response.ok) {
         setSubmissionStatus(`Reservation ${reservationId ? 'updated' : 'created'} successfully.`);
@@ -128,28 +123,30 @@ const ReservationForm = () => {
               />
               <ErrorMessage name="date" component="div" />
             </div>
+
             <div>
               <label htmlFor="time">Time</label>
               <Field name="time" type="time" placeholder="HH:MM" />
               <ErrorMessage name="time" component="div" />
             </div>
+
             <div>
               <label htmlFor="menuItems">Menu Items</label>
-              <Field as="select" name="menuItems" multiple={true}>
+              <Field name="menuItems" as="select" multiple={true} value={values.menuItems || []}>
                 {menuItems.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Field>
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Field>
               <ErrorMessage name="menuItems" component="div" />
             </div>
+
             <div>
               <label htmlFor="specialNotes">Special Notes</label>
               <Field name="specialNotes" placeholder="Special Notes" />
               <ErrorMessage name="specialNotes" component="div" />
             </div>
-            {/* Additional fields for time, guests, menu items, and special notes */}
 
             <button type="submit" disabled={isSubmitting}>
               {reservationId ? 'Update Reservation' : 'Submit Reservation'}
