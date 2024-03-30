@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useParams } from 'react-router-dom'; // Make sure you have this import
-import { useUser } from './UserContext'; // Adjust this import based on your project structure
+import { useParams } from 'react-router-dom';
+import { useUser } from './UserContext';
+import * as Yup from 'yup';
 
 const ReservationForm = () => {
   const { reservationId } = useParams();
-  const { userToken } = useUser(); // Assuming useUser returns userToken
+  const { userToken } = useUser();
   const [menuItems, setMenuItems] = useState([]);
   const [initialValues, setInitialValues] = useState({
     name: '',
     lastname: '',
     email: '',
+    password: '',
     phonenumber: '',
     date: new Date(),
     time: '',
@@ -42,23 +44,19 @@ const ReservationForm = () => {
     };
 
     const fetchReservationDetails = async () => {
+      if (!reservationId) return;
+
       try {
         const response = await fetch(`/reservations/${reservationId}`, {
           headers: { 'Authorization': `Bearer ${userToken}` },
         });
-
         if (response.ok) {
           const reservation = await response.json();
           setInitialValues({
-            name: reservation.name,
-            lastname: reservation.lastname,
-            email: reservation.email,
-            phonenumber: reservation.phonenumber,
+            ...reservation,
             date: new Date(reservation.date),
-            time: reservation.time,
-            guests: reservation.guests.toString(),
+            guests: reservation.guest_count.toString(),
             menuItems: reservation.menuItems.map(item => item.id),
-            specialNotes: reservation.specialNotes,
           });
         } else {
           console.error('Failed to fetch reservation details.');
@@ -69,44 +67,69 @@ const ReservationForm = () => {
     };
 
     fetchMenuItems();
-    if (reservationId) {
-      fetchReservationDetails();
-    }
+    fetchReservationDetails();
   }, [reservationId, userToken]);
 
   const handleSubmit = async (values, { setSubmitting }) => {
+    const formattedDate = values.date.toISOString().split('T')[0];
+    const payload = {
+      ...values,
+      date: formattedDate,
+      menuItems: values.menuItems.map(Number),
+      ...(values.password && !reservationId ? { password: values.password } : {}),
+    };
+
     const endpoint = reservationId ? `/reservations/${reservationId}` : '/reservations';
     const method = reservationId ? 'PUT' : 'POST';
 
     try {
       const response = await fetch(endpoint, {
-        method: method,
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${userToken}`,
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        setSubmissionStatus(`Reservation ${reservationId ? 'updated' : 'created'} successfully.`);
+        setSubmissionStatus({ success: `Reservation ${reservationId ? 'updated' : 'created'} successfully.` });
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to ${reservationId ? 'update' : 'create'} reservation.`);
       }
     } catch (error) {
-      setSubmissionStatus(error.message);
-      console.error('Error:', error);
+      setSubmissionStatus({ error: error.message });
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
   };
+
+  const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Name is required'),
+    lastname: Yup.string().required('Last name is required'),
+    email: Yup.string().email('Invalid email').required('Email is required'),
+    phonenumber: Yup.string().required('Phone number is required'),
+    date: Yup.date().required('Date is required'),
+    time: Yup.string().required('Time is required').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
+    guests: Yup.number().required('Number of guests is required').positive('Number of guests must be positive').integer('Number of guests must be an integer'),
+    menuItems: Yup.array().of(Yup.number().positive('Invalid menu item ID')).required('At least one menu item is required'),
+    specialNotes: Yup.string().trim(),
+    ...(reservationId ? {} : {
+      password: Yup.string().required('Password is required').min(8, 'Password must be at least 8 characters long'),
+    }),
+  });
 
   return (
     <div>
       <h1>{reservationId ? 'Update Your Reservation' : 'Make a Reservation'}</h1>
-      <Formik initialValues={initialValues} enableReinitialize onSubmit={handleSubmit}>
-        {({ setFieldValue, isSubmitting, values }) => (
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        enableReinitialize
+        onSubmit={handleSubmit}
+      >
+        {({ setFieldValue, isSubmitting, values }) => ( // Ensure 'values' is included here
           <Form>
             <Field name="name" placeholder="First Name" />
             <ErrorMessage name="name" component="div" />
@@ -114,8 +137,18 @@ const ReservationForm = () => {
             <Field name="lastname" placeholder="Last Name" />
             <ErrorMessage name="lastname" component="div" />
 
+            <Field name="phonenumber" type="tel" placeholder="Phone Number" />
+            <ErrorMessage name="phonenumber" component="div" />
+
             <Field name="email" type="email" placeholder="Email" />
             <ErrorMessage name="email" component="div" />
+
+            {!reservationId && (
+              <div>
+                <Field name="password" type="password" placeholder="Password" />
+                <ErrorMessage name="password" component="div" />
+              </div>
+            )}
 
             <div>
               <label htmlFor="date">Date</label>
@@ -128,14 +161,22 @@ const ReservationForm = () => {
               />
               <ErrorMessage name="date" component="div" />
             </div>
+
             <div>
               <label htmlFor="time">Time</label>
               <Field name="time" type="time" placeholder="HH:MM" />
               <ErrorMessage name="time" component="div" />
             </div>
+
+            <div>
+              <label htmlFor="guests">Guests</label>
+              <Field name="guests" placeholder="Number of Guests" />
+              <ErrorMessage name="guests" component="div" />
+            </div>
+
             <div>
               <label htmlFor="menuItems">Menu Items</label>
-              <Field as="select" name="menuItems" multiple={true}>
+              <Field as="select" name="menuItems" multiple>
                 {menuItems.map(item => (
                   <option key={item.id} value={item.id}>
                     {item.name}
@@ -144,12 +185,12 @@ const ReservationForm = () => {
               </Field>
               <ErrorMessage name="menuItems" component="div" />
             </div>
+
             <div>
               <label htmlFor="specialNotes">Special Notes</label>
-              <Field name="specialNotes" placeholder="Special Notes" />
+              <Field name="specialNotes" as="textarea" placeholder="Special Notes" />
               <ErrorMessage name="specialNotes" component="div" />
             </div>
-            {/* Additional fields for time, guests, menu items, and special notes */}
 
             <button type="submit" disabled={isSubmitting}>
               {reservationId ? 'Update Reservation' : 'Submit Reservation'}
@@ -157,7 +198,8 @@ const ReservationForm = () => {
           </Form>
         )}
       </Formik>
-      {submissionStatus && <div>{submissionStatus}</div>}
+      {submissionStatus.success && <div className="success">{submissionStatus.success}</div>}
+      {submissionStatus.error && <div className="error">{submissionStatus.error}</div>}
     </div>
   );
 };

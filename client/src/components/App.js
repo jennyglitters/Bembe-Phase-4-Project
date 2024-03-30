@@ -6,6 +6,7 @@ import Menu from './Menu';
 import ReservationForm from './ReservationForm';
 import LocationHours from './Location&Hours';
 import ReservationManagement from './ReservationManagement';
+import LoginForm from './LoginForm';
 import '../index.css';
 import { UserProvider } from './UserContext'; 
 import { MenuContext } from './MenuContext'; // Import MenuContext
@@ -21,12 +22,13 @@ function App() {
             <NavBar />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/menu" element={<Menu />} /> 
+              <Route path="/menu" element={<Menu />} />
               <Route path="/create-reservation" element={<ReservationForm />} />
               <Route path="/update-reservation/:reservationId" element={<ReservationForm />} />
-              <Route path="/reservations" element={<ReservationForm />} /> 
+              <Route path="/reservations" element={<ReservationForm />} />
               <Route path="/location-hours" element={<LocationHours />} />
               <Route path="/manage-reservation" element={<ReservationManagement />} />
+              <Route path="/login" element={<LoginForm />} /> {/* Add this line for your login form */}
             </Routes>
           </div>
         </MenuContext.Provider>

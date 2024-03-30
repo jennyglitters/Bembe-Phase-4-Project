@@ -1,4 +1,3 @@
-#models.py
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -90,14 +89,15 @@ class Reservation(db.Model, SerializerMixin):
     time = db.Column(db.Time, nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
     special_notes = db.Column(db.String(500), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
 
     # Many-to-many relationship is set up with MenuItem
     menu_items = db.relationship('MenuItem', secondary=reservation_menu_item, back_populates='reservations')
     order_items = db.relationship('OrderList', back_populates='reservation')  # This matches the relationship name in OrderList
     user = db.relationship('User', back_populates='reservations')
   
-    def __init__(self, name, lastname, email, phonenumber, date, time, guest_count, special_notes=None):
+    def __init__(self, name, lastname, email, phonenumber, date, time, guest_count, user_id, special_notes=None):
         self.name = name
         self.lastname = lastname
         self.email = email
@@ -105,6 +105,7 @@ class Reservation(db.Model, SerializerMixin):
         self.date = date
         self.time = time
         self.guest_count = guest_count
+        self.user_id = user_id  # Add this line
         self.special_notes = special_notes
 
     #Validation methods
@@ -209,7 +210,7 @@ class OrderList(db.Model, SerializerMixin):
     special_requests = db.Column(db.String(500))
 
     # Relationships
-    reservation = db.relationship('Reservation', back_populates='order_items')  # Singular, indicating one-to-many from Reservation to OrderList
+    reservation = db.relationship('Reservation', back_populates='order_items')  
     menu_item = db.relationship('MenuItem', back_populates='order_items')
 
     def __init__(self, reservation_id, menu_item_id, quantity=1, special_requests=None):
@@ -226,9 +227,3 @@ class OrderList(db.Model, SerializerMixin):
              'quantity': self.quantity,
              'special_requests': self.special_requests
          }
-
-def init_app(app):
-    db.init_app(app)
-    migrate.init_app(app, db)
-    with app.app_context():
-        pass
