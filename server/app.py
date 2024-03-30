@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_migrate import Migrate
-from datetime import timedelta
+from datetime import datetime, timedelta
 from models import db, User, MenuItem, Reservation, OrderList  # Import your database models
 
 def create_app():
@@ -56,6 +56,16 @@ def create_app():
 
         return jsonify({"message": "Invalid credentials."}), 401
 
+    @app.route('/reservations', methods=['GET'])
+    @jwt_required()  # Make sure the user is logged in
+    def get_user_reservations():
+        current_user_id = get_jwt_identity()
+        print(f"Current User ID: {current_user_id}")  # Debugging
+        user_reservations = Reservation.query.filter_by(user_id=current_user_id).all()
+        print(f"Found {len(user_reservations)} reservations for user")  # Debugging
+        reservations_data = [reservation.serialize() for reservation in user_reservations]
+        return jsonify(reservations_data), 200
+
     @app.route('/reservations', methods=['POST'])
     @jwt_required(optional=True)
     def handle_reservations():
@@ -87,6 +97,22 @@ def create_app():
         if not user_id:
             return jsonify({"message": "User identification failed."}), 400
 
+        # Convert guest_count to integer
+        try:
+            guest_count = int(data.get('guests', 0))
+        except ValueError:
+            return jsonify({'message': 'Invalid guest count.'}), 400
+
+        # Debugging: Print datetime and timedelta to verify their presence
+        print(datetime, timedelta)
+
+        # Convert date and time from string to date and time objects
+        try:
+            date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+            time = datetime.strptime(data['time'], '%H:%M').time()
+        except ValueError as e:
+            return jsonify({'message': str(e)}), 400
+
         # Create or update reservation
         if 'reservationId' in data:
             # Assuming reservation update logic here (not covered for brevity)
@@ -99,9 +125,9 @@ def create_app():
                 lastname=data['lastname'],
                 email=data['email'],
                 phonenumber=data['phonenumber'],
-                date=data['date'],
-                time=data['time'],
-                guest_count=data['guests'],  # Assuming 'guests' field from the form maps to 'guest_count'
+                date=date,  # Use the converted date object
+                time=time,  # Use the converted time object
+                guest_count=guest_count,
                 special_notes=data['specialNotes'] if 'specialNotes' in data else None
             )
             db.session.add(reservation)
@@ -116,6 +142,9 @@ def create_app():
 
             db.session.commit()
             return jsonify({"message": "Reservation created successfully"}), 201
+
+        # Return a successful response (or you can add more logic if needed)
+        return jsonify({"message": "Processing completed"}), 200
 
     @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
     @jwt_required()

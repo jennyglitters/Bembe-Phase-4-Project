@@ -9,11 +9,11 @@ def seed_data():
     db.create_all()
 
     user = User(
-        name="John Doe",
-        lastname="Doe",
-        email="johndoe@example.com",
-        phonenumber="1234567890",
-        password="password"  # This is necessary given your User model's __init__ method
+    name="John Doe",
+    lastname="Doe",
+    email="johndoe@example.com",
+    phonenumber="123-456-7890",  # Adjusted to match the expected format
+    password="password"  # This is necessary given your User model's __init__ method
     )
     db.session.add(user)
     db.session.commit()

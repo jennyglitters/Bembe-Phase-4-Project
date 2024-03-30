@@ -73,8 +73,9 @@ class User(db.Model, SerializerMixin):
         return email
 
     @validates('phonenumber')
-    def validate_phonenumber(self, key, phonenumber):  # Changed method name for clarity
-        if not re.match(r"^\+?\d{10,15}$", phonenumber):
+    def validate_phonenumber(self, key, phonenumber):
+        # Updated regex to match the format 123-456-7890
+        if not re.match(r"^\d{3}-\d{3}-\d{4}$", phonenumber):
             raise ValueError("Invalid phone number format.")
         return phonenumber
 
@@ -124,21 +125,21 @@ class Reservation(db.Model, SerializerMixin):
     def validate_reservation_email(self, key, email):  
         return self.validate_email(key, email)
 
+    @validates('phonenumber')
     def validate_phonenumber(self, key, phonenumber):
-        """Validate the phonenumber format."""
-        if not re.match(r"^\+?\d{10,15}$", phonenumber):
+        # Updated regex to match the format 123-456-7890
+        if not re.match(r"^\d{3}-\d{3}-\d{4}$", phonenumber):
             raise ValueError("Invalid phone number format.")
         return phonenumber
 
-    @validates('phonenumber')
-    def validate_reservation_phonenumber(self, key, phonenumber):  
-        return self.validate_phonenumber(key, phonenumber)
-
-
     @validates('guest_count')
     def validate_guest_count(self, key, value):
+        try:
+            value = int(value)
+        except ValueError:
+            raise AssertionError("Guest count must be an integer.")
         if value <= 0:
-            raise ValueError("Guest count must be greater than zero.")
+            raise AssertionError("Guest count must be greater than zero.")
         return value
 
     # Serialization 

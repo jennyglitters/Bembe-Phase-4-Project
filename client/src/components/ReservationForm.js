@@ -70,7 +70,8 @@ const ReservationForm = () => {
     fetchReservationDetails();
   }, [reservationId, userToken]);
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    console.log('Submitting with values:', values);
     const formattedDate = values.date.toISOString().split('T')[0];
     const payload = {
       ...values,
@@ -79,8 +80,12 @@ const ReservationForm = () => {
       ...(values.password && !reservationId ? { password: values.password } : {}),
     };
 
+    console.log('Payload:', payload);
+
     const endpoint = reservationId ? `/reservations/${reservationId}` : '/reservations';
     const method = reservationId ? 'PUT' : 'POST';
+
+    console.log(`Making a ${method} request to ${endpoint} with payload:`, payload);
 
     try {
       const response = await fetch(endpoint, {
@@ -92,33 +97,39 @@ const ReservationForm = () => {
         body: JSON.stringify(payload),
       });
 
-      if (response.ok) {
-        setSubmissionStatus({ success: `Reservation ${reservationId ? 'updated' : 'created'} successfully.` });
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to ${reservationId ? 'update' : 'create'} reservation.`);
       }
+
+      const responseData = await response.json();
+      console.log('Success response data:', responseData);
+      setSubmissionStatus({ success: `Reservation ${reservationId ? 'updated' : 'created'} successfully.` });
+      resetForm(); // Optionally reset form after successful submission
     } catch (error) {
-      setSubmissionStatus({ error: error.message });
+      console.error('Error submitting form:', error);
+      setSubmissionStatus({ error: error.toString() });
     } finally {
       setSubmitting(false);
     }
-  };
+};
 
-  const validationSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
-    lastname: Yup.string().required('Last name is required'),
-    email: Yup.string().email('Invalid email').required('Email is required'),
-    phonenumber: Yup.string().required('Phone number is required'),
-    date: Yup.date().required('Date is required'),
-    time: Yup.string().required('Time is required').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
-    guests: Yup.number().required('Number of guests is required').positive('Number of guests must be positive').integer('Number of guests must be an integer'),
-    menuItems: Yup.array().of(Yup.number().positive('Invalid menu item ID')).required('At least one menu item is required'),
-    specialNotes: Yup.string().trim(),
-    ...(reservationId ? {} : {
-      password: Yup.string().required('Password is required').min(8, 'Password must be at least 8 characters long'),
-    }),
-  });
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  lastname: Yup.string().required('Last name is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  phonenumber: Yup.string()
+  .matches(/^\d{3}-\d{3}-\d{4}$/, 'Phone number must be in the format 123-456-7890')
+  .required('Phone number is required'),
+  date: Yup.date().required('Date is required'),
+  time: Yup.string().required('Time is required').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
+  guests: Yup.number().required('Number of guests is required').positive('Number of guests must be positive').integer('Number of guests must be an integer'),
+  menuItems: Yup.array().of(Yup.number().positive('Invalid menu item ID')).required('At least one menu item is required'),
+  specialNotes: Yup.string().trim(),
+  ...(reservationId ? {} : {
+    password: Yup.string().required('Password is required').min(8, 'Password must be at least 8 characters long'),
+  }),
+});
 
   return (
     <div>
