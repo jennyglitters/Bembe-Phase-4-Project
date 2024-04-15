@@ -67,84 +67,54 @@ def create_app():
         return jsonify(reservations_data), 200
 
     @app.route('/reservations', methods=['POST'])
-    @jwt_required(optional=True)
     def handle_reservations():
         data = request.json
-        user_id = get_jwt_identity()
 
-        # Handle new user registration or identify the existing user
-        if not user_id:
-            user = User.query.filter_by(email=data['email']).first()
-            if user and 'password' in data:
-                # Conflict: trying to register an existing email with a password
-                return jsonify({'message': 'Email already registered.'}), 409
-            elif not user:
-                # New user registration
-                if 'password' not in data:
-                    return jsonify({'message': 'Password is required for new user registration.'}), 400
+        # Ensure all required fields are present
+        required_fields = ['name', 'lastname', 'email', 'phonenumber', 'password', 'date', 'time', 'guest_count']
+        if not all(field in data for field in required_fields):
+            return jsonify({'message': 'Missing one or more required fields.'}), 400
+
+        # Check if the user already exists
+        user = User.query.filter_by(email=data['email']).first()
+        if not user:
+            # Create a new user if not found
+            try:
                 user = User(
                     name=data['name'],
                     lastname=data['lastname'],
                     email=data['email'],
-                    phonenumber=data['phonenumber']
+                    phonenumber=data['phonenumber'],
+                    password=data['password']  # Ensure password is handled securely
                 )
-                user.set_password(data['password'])
                 db.session.add(user)
-                db.session.flush()  # Flush to assign an ID without committing
-                user_id = user.id
+                db.session.commit()
+            except Exception as e:
+                return jsonify({'message': str(e)}), 400
 
-        # Ensure user_id is available for reservation creation
-        if not user_id:
-            return jsonify({"message": "User identification failed."}), 400
-
-        # Convert guest_count to integer
-        try:
-            guest_count = int(data.get('guests', 0))
-        except ValueError:
-            return jsonify({'message': 'Invalid guest count.'}), 400
-
-        # Debugging: Print datetime and timedelta to verify their presence
-        print(datetime, timedelta)
-
-        # Convert date and time from string to date and time objects
+        # Parse date and time
         try:
             date = datetime.strptime(data['date'], '%Y-%m-%d').date()
             time = datetime.strptime(data['time'], '%H:%M').time()
         except ValueError as e:
-            return jsonify({'message': str(e)}), 400
+            return jsonify({'message': 'Invalid date or time format.'}), 400
 
-        # Create or update reservation
-        if 'reservationId' in data:
-            # Assuming reservation update logic here (not covered for brevity)
-            pass
-        else:
-            # New reservation creation
-            reservation = Reservation(
-                user_id=user_id,
-                name=data['name'],
-                lastname=data['lastname'],
-                email=data['email'],
-                phonenumber=data['phonenumber'],
-                date=date,  # Use the converted date object
-                time=time,  # Use the converted time object
-                guest_count=guest_count,
-                special_notes=data['specialNotes'] if 'specialNotes' in data else None
-            )
-            db.session.add(reservation)
-            db.session.flush()  # Flush to assign an ID to the reservation without committing
+        # Create a reservation
+        reservation = Reservation(
+            user_id=user.id,
+            name=data['name'],
+            lastname=data['lastname'],
+            email=data['email'],
+            phonenumber=data['phonenumber'],
+            date=date,
+            time=time,
+            guest_count=data['guest_count'],
+            special_notes=data.get('specialNotes')
+        )
+        db.session.add(reservation)
+        db.session.commit()
 
-            # Handling menuItems association
-            if 'menuItems' in data and isinstance(data['menuItems'], list):
-                for menu_item_id in data['menuItems']:
-                    menu_item = MenuItem.query.get(menu_item_id)
-                    if menu_item:
-                        reservation.menu_items.append(menu_item)
-
-            db.session.commit()
-            return jsonify({"message": "Reservation created successfully"}), 201
-
-        # Return a successful response (or you can add more logic if needed)
-        return jsonify({"message": "Processing completed"}), 200
+        return jsonify({'message': 'Reservation created successfully', 'reservation_id': reservation.id}), 201
 
     @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
     @jwt_required()
