@@ -6,16 +6,19 @@ const Menu = () => {
 
   const handleItemClick = (itemId) => {
     setSelectedItems((prevSelectedItems) => {
-      if (prevSelectedItems.includes(itemId)) {
-        return prevSelectedItems.filter(id => id !== itemId);
+      // Ensure prevSelectedItems is always an array
+      const safeItems = prevSelectedItems || [];
+      if (safeItems.includes(itemId)) {
+        return safeItems.filter(id => id !== itemId);
       } else {
-        return [...prevSelectedItems, itemId];
+        return [...safeItems, itemId];
       }
     });
   };
 
   const isItemSelected = (itemId) => {
-    return selectedItems.includes(itemId);
+    // Ensure selectedItems is always treated as an array
+    return selectedItems && selectedItems.includes(itemId);
   };
 
   // Modify renderMenuItem to only handle actual selectable items

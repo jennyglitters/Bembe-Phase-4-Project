@@ -116,7 +116,7 @@ def create_app():
 
         return jsonify({'message': 'Reservation created successfully', 'reservation_id': reservation.id}), 201
 
-    @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PUT', 'DELETE'])
+    @app.route('/reservations/<int:reservation_id>', methods=['GET', 'PATCH', 'DELETE'])
     @jwt_required()
     def manage_reservation(reservation_id):
         reservation = Reservation.query.get_or_404(reservation_id)
@@ -128,12 +128,23 @@ def create_app():
         if request.method == 'GET':
             return jsonify(reservation.serialize()), 200
 
-        elif request.method == 'PUT':
-            data = request.json
-            for key, value in data.items():
-                setattr(reservation, key, value)
-            db.session.commit()
-            return jsonify({"message": "Reservation updated successfully"}), 200
+        elif request.method == 'PATCH':
+            data = request.get_json()
+            try:
+                if 'date' in data:
+                    reservation.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+                if 'time' in data:
+                    reservation.time = datetime.strptime(data['time'], '%H:%M').time()
+                
+                for key, value in data.items():
+                    if hasattr(reservation, key) and key not in ['date', 'time']:
+                        setattr(reservation, key, value)
+
+                db.session.commit()
+                return jsonify({"message": "Reservation updated successfully"}), 200
+            except ValueError as e:
+                db.session.rollback()
+                return jsonify({"error": "Invalid date or time format", "details": str(e)}), 400
 
         elif request.method == 'DELETE':
             db.session.delete(reservation)

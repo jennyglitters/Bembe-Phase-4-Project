@@ -1,84 +1,56 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback to your imports
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import ReservationCard from './ReservationCard'; // Ensure this component is imported
 
 const ReservationManagement = () => {
-  const { userToken, isAuthenticated } = useUser();
+  const { isAuthenticated, userToken } = useUser();
   const [reservations, setReservations] = useState([]);
   const navigate = useNavigate();
 
   const fetchReservations = useCallback(async () => {
-    if (!isAuthenticated) return;
-
     try {
       const response = await fetch('/reservations', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-        },
+        headers: { 'Authorization': `Bearer ${userToken}` },
       });
       if (!response.ok) {
-        // It's a good practice to handle potential errors from the server
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to fetch reservations');
+        // Handle potential 401 Unauthorized or other network errors
+        if (response.status === 401) {
+          console.error('Session expired or invalid. Redirecting to login.');
+          navigate('/login');
+          return;
+        }
+        throw new Error('Failed to fetch reservations');
       }
       const data = await response.json();
       setReservations(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching reservations:', error.message);
     }
-  }, [userToken, isAuthenticated]); // Dependencies for useCallback
+  }, [userToken, navigate]);
 
   useEffect(() => {
-    fetchReservations();
-  }, [fetchReservations]); // fetchReservations is now a dependency
-
-  const deleteReservation = async (reservationId) => {
-    if (window.confirm('Are you sure you want to cancel this reservation?')) {
-      try {
-        const response = await fetch(`/reservations/${reservationId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${userToken}`,
-          },
-        });
-        if (!response.ok) {
-          // Again, handling potential server errors
-          const errorText = await response.text();
-          throw new Error(errorText || 'Failed to cancel reservation');
-        }
-        setReservations(current => current.filter(reservation => reservation.id !== reservationId));
-        alert('Reservation successfully canceled');
-      } catch (error) {
-        console.error('Failed to cancel reservation:', error);
-        alert(error.message); // Providing feedback to the user
-      }
+    if (isAuthenticated) {
+      fetchReservations();
+    } else {
+      console.log('User is not authenticated, navigating to login...');
+      navigate('/login');
     }
-  };
-
-  const handleUpdateClick = (reservationId) => {
-    navigate(`/update-reservation/${reservationId}`);
-  };
+  }, [isAuthenticated, navigate, fetchReservations]);
 
   return (
     <div>
       <h1>Manage Your Reservations</h1>
-      {isAuthenticated ? (
-        <>
-          {reservations.length > 0 ? (
-            reservations.map(reservation => (
-              <div key={reservation.id}>
-                <p>Reservation for {reservation.name} on {new Date(reservation.date).toLocaleDateString()} at {reservation.time}</p>
-                <p>Guests: {reservation.guests}</p>
-                <button onClick={() => handleUpdateClick(reservation.id)}>Update</button>
-                <button onClick={() => deleteReservation(reservation.id)}>Cancel</button>
-              </div>
-            ))
-          ) : <p>No reservations found. Please make a reservation.</p>}
-          <button onClick={() => navigate('/create-reservation')}>Create New Reservation</button>
-        </>
+      {reservations.length > 0 ? (
+        reservations.map(reservation => (
+          <ReservationCard
+            key={reservation.id}
+            reservation={reservation}
+            fetchReservations={fetchReservations} // Pass this if the card needs to refresh the list after an operation
+          />
+        ))
       ) : (
-        <p>Please <button onClick={() => navigate('/login')}>login</button> to manage your reservations.</p>
+        <p>No reservations found. Please make a reservation.</p>
       )}
     </div>
   );
