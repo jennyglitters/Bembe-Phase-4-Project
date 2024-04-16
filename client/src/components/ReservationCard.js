@@ -19,25 +19,31 @@ const ReservationCard = ({ reservation, fetchReservations }) => {
   };
 
   const handleSave = async () => {
+    const requestBody = {
+      ...updatedReservation,
+      date: updatedReservation.date.toISOString().split('T')[0],  // Ensure date is in YYYY-MM-DD
+      time: updatedReservation.time.slice(0, 5),  // Adjust time format to HH:mm
+      guest_count: parseInt(updatedReservation.guests, 10),  // Ensure guest count is an integer
+    };
+  
+    console.log("Request body:", JSON.stringify(requestBody));
+  
     try {
       const response = await fetch(`/reservations/${reservation.id}`, {
-        method: 'PATCH',  // Changed from 'PUT' to 'PATCH'
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...updatedReservation,
-          date: updatedReservation.date.toISOString().split('T')[0], // Format date to YYYY-MM-DD
-          guest_count: parseInt(updatedReservation.guests), // Ensure guest count is an integer
-        }),
+        body: JSON.stringify(requestBody),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error Data:", errorData);  // Log the detailed error response
         throw new Error(errorData.message || 'Could not update reservation.');
       }
-
+  
       alert('Reservation updated successfully');
       setEditMode(false);
       fetchReservations();
