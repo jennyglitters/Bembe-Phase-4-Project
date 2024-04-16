@@ -44,10 +44,11 @@ body {
 /* Home */
 .info-content h1,
 .info-content h2,
+.info-content h3,
 .info-content p,
 .info-content address {
   color: black; /* Ensures all text is black */
-  margin: 10px 0; /* Spacing between elements */
+  margin: 1px 0; /* Spacing between elements */
 }
 
 .info-content {
@@ -368,6 +369,10 @@ button.clear-form-button:hover {
 }
 
 /* Reservation Management */
+h1 {
+  text-align: center; /* Centers the text horizontally in its container */
+}
+
 button:hover {
   background-color: #b3b3b3; /* Darker gray */
   color: white;
@@ -419,4 +424,75 @@ button:hover {
   min-height: 10vh; 
   width: 100%; 
   text-align: center; 
+}
+
+/* Res Card */
+
+.center-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vh;
+  width: 100%;
+  text-align: center;
+}
+
+input[type="email"], input[type="text"], input[type="number"], input[type="time"], textarea {
+  display: block;
+  width: 100%; /* Full width to maintain consistency */
+  margin: 10px 0; /* Uniform margin */
+  padding: 10px;
+  border: 1px solid #ddd; /* Light grey border */
+  border-radius: 4px;
+  box-sizing: border-box; /* Include padding and border in width */
+}
+
+textarea {
+  height: 80px; /* Fixed height for better form alignment */
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #f8f9fa; /* Light grey background */
+  color: #333; /* Dark grey text */
+  border: 1px solid #ccc; /* Slightly darker border than input fields */
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+}
+
+button:hover {
+  background-color: #b3b3b3; /* Darker grey on hover */
+  color: white;
+}
+
+/* Reservation Card Specific Styling */
+.reservation-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 10px auto; /* Center align the card */
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slightly heavier shadow for a "lifted" effect */
+  width: 90%; /* Optimal width for responsiveness */
+  max-width: 600px; /* Max width to avoid overly wide cards on larger screens */
+}
+
+.reservation-card h3 {
+  color: #333;
+  margin-top: 0;
+}
+
+/* DatePicker Styling to ensure it fits seamlessly in the form */
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }

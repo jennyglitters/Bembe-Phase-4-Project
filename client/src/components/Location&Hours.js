@@ -3,7 +3,7 @@ import React from 'react';
 const LocationAndHours = () => {
     return (
         <div className='location-hours'>
-            <h1>Bembe Puerto Rican Dominican Fusion</h1>
+            <h1>Bembe Puerto Rican/Dominican Fusion</h1>
             <h2>FREE DELIVERY</h2>
             <p>
             <a href="tel:973-554-5648">973-554-5648</a>
